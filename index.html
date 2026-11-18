@@ -32,7 +32,6 @@
 @media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2196F3">
 </head>
 <body>
 <header class="top">
@@ -45,29 +44,40 @@
    <div class="address"><select id="area"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى - اكتبها في العنوان</option></select><input id="quickAddress" placeholder="اسم الشارع أو المنطقة"><button onclick="document.getElementById('customerAddress').value=document.getElementById('quickAddress').value;openCart()">اطلب الآن</button></div>
   </div><div class="hero-art">🛵</div>
  </section>
- <div class="section-head"><div><h2>تسوق حسب القسم</h2><p>اختار القسم المناسب لطلبك</p></div></div>
- <section class="categories" id="categories"></section>
+
+ <div class="section-head"><div><h2>المتاجر المتاحة</h2><p>اختر المتجر المناسب لطلبك</p></div></div>
+ <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
+
  <div class="section-head"><div><h2 id="productTitle">منتجات مقترحة</h2><p>الأسعار والمعلومات متصلة بقاعدة البيانات</p></div></div>
  <section class="products" id="products"></section>
+
  <section class="panel"><h3>الطلب من وصّال سهل</h3><div class="steps">
   <div class="step"><b>① اختار طلبك</b><p>تصفح المنتجات وأضف احتياجاتك إلى السلة.</p></div>
   <div class="step"><b>② أكد بياناتك</b><p>اكتب اسمك ورقم هاتفك وعنوان التوصيل بالتفصيل.</p></div>
   <div class="step"><b>③ استلم عند الباب</b><p>سيتواصل معك فريق التشغيل لتأكيد الطلب والتوصيل.</p></div>
  </div></section>
  <section class="panel"><h3>للمتاجر والمندوبين</h3><p class="muted">يسعدنا انضمام المحلات والمندوبين إلى شبكة وصّال. يتم إدارة العمليات من خلال لوحة تحكم وصّال.</p><button class="add" onclick="showAdmin()">فتح لوحة التحكم الإدارية</button></section>
- <section class="panel admin" id="admin"><div class="drawer-head"><h3>لوحة تحكم وصّال (مركز الطلبات)</h3><button class="close" onclick="document.getElementById('admin').classList.remove('show')">×</button></div><div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div></section>
+ 
+ <section class="panel admin" id="admin">
+  <div class="drawer-head"><h3>لوحة تحكم وصّال (مركز الطلبات)</h3><button class="close" onclick="document.getElementById('admin').classList.remove('show')">×</button></div>
+  <div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div>
+ </section>
+
  <p class="muted" style="text-align:center;margin-top:20px">نظام وصّال دسوق — متصل بقاعدة بيانات Supabase المباشرة.</p>
 </main>
 <footer class="footer">© وصّال دسوق — خدمة دسوق والقرى المحيطة</footer>
 <button class="cart-fab" onclick="openCart()">🛒 سلة الطلب <span id="fabCount">0</span></button>
+
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeCart()"><div class="drawer">
  <div class="drawer-head"><h2 style="margin:0">سلة مشترياتك</h2><button class="close" onclick="closeCart()">×</button></div>
- <div id="cartItems"></div><div class="field"><label>منطقة التوصيل</label><select id="checkoutArea"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى</option></select></div>
+ <div id="cartItems"></div>
+ <div class="field"><label>منطقة التوصيل</label><select id="checkoutArea"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى</option></select></div>
  <div class="field"><label>الاسم</label><input id="customerName" placeholder="الاسم بالكامل"></div>
  <div class="field"><label>رقم الهاتف</label><input id="customerPhone" type="tel" placeholder="01xxxxxxxxx"></div>
  <div class="field"><label>العنوان بالتفصيل</label><textarea id="customerAddress" rows="2" placeholder="الشارع، رقم المنزل، علامة مميزة"></textarea></div>
  <div class="field"><label>ملاحظات للطلب (اختياري)</label><textarea id="notes" rows="2" placeholder="أي تفاصيل إضافية"></textarea></div>
- <p id="total" style="font-weight:800"></p><p class="muted">الدفع نقداً عند الاستلام. رسوم التوصيل يحددها فريق التشغيل بعد تأكيد المنطقة.</p>
+ <p id="total" style="font-weight:800"></p>
+ <p class="muted">الدفع نقداً عند الاستلام. رسوم التوصيل يحددها فريق التشغيل بعد تأكيد المنطقة.</p>
  <button class="submit" id="btnSubmit" onclick="placeOrder()">تأكيد وإرسال الطلب</button>
 </div></div>
 
@@ -91,18 +101,82 @@ const catalog=[
  {id:11,name:"مسحوق غسيل",cat:"مستلزمات منزلية",price:85,unit:"للعبوة",emoji:"🧼"},
  {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"}
 ];
-const cats=[["الكل","🛍️"],["سوبر ماركت","🛒"],["مطاعم","🍔"],["صيدليات","🧴"],["خضراوات","🥬"],["مستلزمات منزلية","🧹"],["طلبات خاصة","📦"]];
-let active="الكل",cart={};
+
+let cart={};
 const money=n=>n.toLocaleString("ar-EG")+" ج.م";
 
-function renderCats(){document.getElementById("categories").innerHTML=cats.map(([c,e])=>`<button class="cat ${active===c?'active':''}" onclick="filterCat('${c}')"><span>${e}</span>${c}</button>`).join("")}
-function renderProducts(){let list=active==="الكل"?catalog:catalog.filter(p=>p.cat===active);if(active==="طلبات خاصة")list=[];document.getElementById("productTitle").textContent=active==="الكل"?"منتجات مقترحة":active;document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product"><div class="pic">${p.emoji}</div><h3>${p.name}</h3><small>${p.unit}</small><div class="price-row"><span class="price">${money(p.price)}</span><button class="add" onclick="add(${p.id})">+ أضف</button></div></article>`).join(""):`<div class="panel" style="grid-column:1/-1"><b>اطلب ما تحتاجه</b><p class="muted">يمكنك كتابة طلبك الخاص والتفاصيل في ملاحظات السلة وسننفذه لك فوراً.</p><button class="add" onclick="openCart()">أرسل طلباً خاصاً</button></div>`}
-function filterCat(c){active=c;renderCats();renderProducts()}
+// جلب وعرض المتاجر من سوبابيس
+async function fetchStores() {
+  try {
+    const { data: stores, error } = await supabaseClient
+      .from('stores')
+      .select('*');
+
+    if (error) throw error;
+
+    const container = document.getElementById('storesContainer');
+    if (!container) return;
+
+    if (!stores || stores.length === 0) {
+      container.innerHTML = '<p class="muted">لا توجد متاجر مضافة حالياً.</p>';
+      return;
+    }
+
+    container.innerHTML = stores.map(store => `
+      <article class="product" style="cursor: pointer;" onclick="alert('تم اختيار متجر: ${store.name}')">
+        <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
+          ${!store.image_url ? '🏪' : ''}
+        </div>
+        <h3>${store.name}</h3>
+        <small>التصنيف: ${store.category}</small>
+        <div class="price-row">
+          <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
+            ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
+          </span>
+        </div>
+      </article>
+    `).join("");
+  } catch (err) {
+    console.error('خطأ في جلب المتاجر:', err);
+    document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
+  }
+}
+
+function renderProducts(){
+  let list = catalog;
+  document.getElementById("products").innerHTML = list.map(p=>`
+    <article class="product">
+      <div class="pic">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <small>${p.unit}</small>
+      <div class="price-row">
+        <span class="price">${money(p.price)}</span>
+        <button class="add" onclick="add(${p.id})">+ أضف</button>
+      </div>
+    </article>
+  `).join("");
+}
+
 function add(id){cart[id]=(cart[id]||0)+1;updateCart()}
 function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];updateCart()}
 function count(){return Object.values(cart).reduce((a,b)=>a+b,0)}
-function updateCart(){document.getElementById("topCount").textContent=count();document.getElementById("fabCount").textContent=count();let rows=Object.entries(cart).map(([id,q])=>{let p=catalog.find(x=>x.id==id);return `<div class="cart-line"><div><b>${p.name}</b><div class="muted">${money(p.price)} × ${q}</div></div><div class="qty"><button onclick="change(${id},-1)">−</button> ${q} <button onclick="change(${id},1)">+</button></div></div>`}).join("");document.getElementById("cartItems").innerHTML=rows||'<p class="muted">السلة فارغة. أضف بعض المنتجات أولاً.</p>';let total=Object.entries(cart).reduce((s,[id,q])=>s+catalog.find(p=>p.id==id).price*q,0);document.getElementById("total").textContent="إجمالي المنتجات: "+money(total)}
-function openCart(){document.getElementById("overlay").classList.add("show");document.getElementById("checkoutArea").value=document.getElementById("area").value;updateCart()}
+function updateCart(){
+  document.getElementById("topCount").textContent=count();
+  document.getElementById("fabCount").textContent=count();
+  let rows=Object.entries(cart).map(([id,q])=>{
+    let p=catalog.find(x=>x.id==id);
+    return `<div class="cart-line"><div><b>${p.name}</b><div class="muted">${money(p.price)} × ${q}</div></div><div class="qty"><button onclick="change(${id},-1)">−</button> ${q} <button onclick="change(${id},1)">+</button></div></div>`;
+  }).join("");
+  document.getElementById("cartItems").innerHTML=rows||'<p class="muted">السلة فارغة. أضف بعض المنتجات أولاً.</p>';
+  let total=Object.entries(cart).reduce((s,[id,q])=>s+catalog.find(p=>p.id==id).price*q,0);
+  document.getElementById("total").textContent="إجمالي المنتجات: "+money(total);
+}
+
+function openCart(){
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("checkoutArea").value=document.getElementById("area").value;
+  updateCart();
+}
 function closeCart(){document.getElementById("overlay").classList.remove("show")}
 
 async function placeOrder(){
@@ -112,14 +186,13 @@ async function placeOrder(){
 
  const submitBtn = document.getElementById("btnSubmit");
  submitBtn.disabled = true;
- submitBtn.textContent = "جاري إرسال الطلب إلى قاعدة البيانات...";
+ submitBtn.textContent = "جاري إرسال الطلب...";
 
  let items=Object.entries(cart).map(([id,q])=>{let p=catalog.find(x=>x.id==id);return {name:p.name,qty:q,price:p.price}});
  let orderNum = "WD-" + Date.now().toString().slice(-6);
  let totalAmount = items.reduce((s,x)=>s+x.qty*x.price,0);
 
  try {
-   // 1. Insert order header into Supabase
    const { data: orderData, error: orderErr } = await supabaseClient
      .from('orders')
      .insert([{
@@ -137,10 +210,8 @@ async function placeOrder(){
      .select();
 
    if (orderErr) throw orderErr;
-
    const createdOrder = orderData[0];
 
-   // 2. Insert items into Supabase
    const orderItemsData = items.map(item => ({
      order_id: createdOrder.id,
      item_name: item.name,
@@ -149,18 +220,18 @@ async function placeOrder(){
      total_price: item.qty * item.price
    }));
 
-   const { error: itemsErr } = await supabaseClient
-     .from('order_items')
-     .insert(orderItemsData);
-
+   const { error: itemsErr } = await supabaseClient.from('order_items').insert(orderItemsData);
    if (itemsErr) throw itemsErr;
 
-   alert("✅ تم إرسال طلبك بنجاح وحفظه في قاعدة بيانات Supabase! رقم الطلب: " + orderNum);
-   cart={};updateCart();closeCart();
-   document.getElementById("customerName").value="";document.getElementById("customerPhone").value="";document.getElementById("customerAddress").value="";document.getElementById("notes").value="";
+   alert("✅ تم إرسال طلبك بنجاح! رقم الطلب: " + orderNum);
+   cart={}; updateCart(); closeCart();
+   document.getElementById("customerName").value="";
+   document.getElementById("customerPhone").value="";
+   document.getElementById("customerAddress").value="";
+   document.getElementById("notes").value="";
  } catch(err) {
    console.error("Supabase Error:", err);
-   alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + (err.message || JSON.stringify(err)));
+   alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + err.message);
  } finally {
    submitBtn.disabled = false;
    submitBtn.textContent = "تأكيد وإرسال الطلب";
@@ -170,16 +241,13 @@ async function placeOrder(){
 async function showAdmin(){
  let pin=prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
  if(pin!=="1234") return;
- 
- let a=document.getElementById("admin");
- a.classList.add("show");
+ document.getElementById("admin").classList.add("show");
  fetchOrdersFromSupabase();
 }
 
 async function fetchOrdersFromSupabase(){
  const listDiv = document.getElementById("ordersList");
- listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات من Supabase...</p>";
- 
+ listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات...</p>";
  try {
    const { data: orders, error } = await supabaseClient
      .from('orders')
@@ -189,7 +257,7 @@ async function fetchOrdersFromSupabase(){
    if (error) throw error;
 
    if(!orders || orders.length === 0){
-     listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة في قاعدة البيانات بعد.</p>";
+     listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة بعد.</p>";
      return;
    }
 
@@ -197,123 +265,49 @@ async function fetchOrdersFromSupabase(){
      const statusBadge = o.status === 'new' ? '<span class="badge new">جديد</span>' : 
                           o.status === 'accepted' ? '<span class="badge accepted">قيد التجهيز</span>' : 
                           o.status === 'delivered' ? '<span class="badge delivered">تم التوصيل</span>' : 
-                          '<span class="badge canceled" style="background-color: #f44336; color: white; padding: 4px 8px; border-radius: 4px;">ملغي</span>';
+                          '<span class="badge" style="background:#f44336;color:white">ملغي</span>';
      
-     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "لا توجد تفاصيل";
-     const dateFormatted = new Date(o.created_at).toLocaleString('ar-EG');
+     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
 
      return `<div class="order">
-       <b>${o.order_number}</b> ${statusBadge} — <small>${dateFormatted}</small><br>
+       <b>${o.order_number}</b> ${statusBadge} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
        <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
-       <div class="mb-3">
-  <label for="orderStore" class="form-label">المتجر</label>
-  <select id="orderStore" class="form-select">
-    <option value="">جاري تحميل المتاجر...</option>
-  </select>
-</div>
        <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
        <b>المنتجات:</b> ${itemsList}<br>
        <b>الإجمالي:</b> ${money(o.total)}<br>
        ${o.notes ? `<b>ملاحظات:</b> ${o.notes}` : ''}
-  <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap;">
-  <button onclick="updateOrderStatus('${o.id || order.id}', 'accepted')" style="background-color: #2196F3; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit;">
-    ⏳ قيد التجهيز
-  </button>
-
-  <button onclick="updateOrderStatus('${o.id || order.id}', 'delivered')" style="background-color: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit;">
-    ✅ تم التوصيل
-  </button>
-
-  <button onclick="updateOrderStatus('${o.id || order.id}', 'canceled')" style="background-color: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit;">
-    ❌ إلغاء الطلب
-   </button>
-</div>
+       <div style="margin-top: 10px; display: flex; gap: 6px;">
+         <button onclick="updateOrderStatus('${o.id}', 'accepted')" style="background:#2196F3;color:white;padding:4px 8px;border-radius:4px">قيد التجهيز</button>
+         <button onclick="updateOrderStatus('${o.id}', 'delivered')" style="background:#4CAF50;color:white;padding:4px 8px;border-radius:4px">تم التوصيل</button>
+         <button onclick="updateOrderStatus('${o.id}', 'canceled')" style="background:#f44336;color:white;padding:4px 8px;border-radius:4px">إلغاء</button>
+       </div>
      </div>`;
    }).join("");
-
  } catch(err) {
-   console.error(err);
-   listDiv.innerHTML = "<p style='color:red;'>حدث خطأ أثناء جلب الطلبات: " + err.message + "</p>";
+   listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
  }
 }
 
-renderCats();renderProducts();updateCart();
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) throw error;
+    alert("تم التحديث بنجاح! ✅");
+    fetchOrdersFromSupabase();
+  } catch (err) {
+    alert("خطأ: " + err.message);
+  }
+}
+
+// التشغيل التلقائي عند فتح الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+  fetchStores();
+  renderProducts();
+  updateCart();
+});
+
 document.querySelector(".brand").style.cursor="pointer";
 document.querySelector(".brand").addEventListener("dblclick",showAdmin);
-async function updateOrderStatus(orderId, newStatus) {
-  try {
-    const { error } = await supabaseClient
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', orderId);
-
-    if (error) throw error;
-
-    alert("تم تحديث حالة الطلب بنجاح! ✅");
-   // دالة لجلب وعرض الطلبات بشكل سليم ومستقر
-async function fetchOrdersFromSupabase() {
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('خطأ في جلب الطلبات:', error);
-    return;
-  }
-
-  const ordersContainer = document.getElementById('ordersContainer');
-  if (!ordersContainer) return;
-
-  ordersContainer.innerHTML = '';
-  
-  orders.forEach(order => {
-    ordersContainer.innerHTML += `
-      <div class="order-card">
-        <p><strong>رقم الطلب:</strong> ${order.id}</p>
-        <p><strong>العميل:</strong> ${order.customer_name} | <strong>الهاتف:</strong> ${order.phone}</p>
-        <p><strong>العنوان:</strong> ${order.address}</p>
-        <p><strong>الإجمالي:</strong> ${order.total} ج.م</p>
-      </div>
-    `;
-  });
-}
-
-// دالة تحديث حالة الطلب
-async function updateOrderStatus(orderId, newStatus) {
-  try {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', orderId);
-
-    if (error) throw error;
-
-    alert("تم تحديث حالة الطلب بنجاح! ✅");
-    fetchOrdersFromSupabase(); // إعادة جلب الطلبات لتحديث الشاشة فوراً
-  } catch (err) {
-    alert("حدث خطأ أثناء التحديث: " + err.message);
-  }
-}
-
-// تشغيل جلب الطلبات عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-  fetchOrdersFromSupabase();
-});
 </script>
-async function updateOrderStatus(orderId, newStatus) {
-  try {
-    const { error } = await supabaseClient
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', orderId);
-
-    if (error) throw error;
-
-    alert("تم تحديث حالة الطلب بنجاح! ✅");
-    fetchOrdersFromSupabase(); // إعادة جلب الطلبات لتحديث الشاشة فوراً
-  } catch (err) {
-    alert("حدث خطأ أثناء التحديث: " + err.message);
-  }
-}
-</body></html>
+</body>
+</html>
