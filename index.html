@@ -123,7 +123,7 @@ async function fetchStores() {
     }
 
     container.innerHTML = stores.map(store => `
-      <article class="product" style="cursor: pointer;" onclick="alert('تم اختيار متجر: ${store.name}')">
+      <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
         <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
           ${!store.image_url ? '🏪' : ''}
         </div>
