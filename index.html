@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123c3a">
+<title>وصّال دسوق | طلباتك لحد باب بيتك</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--green:#123c3a;--green2:#1b625b;--orange:#f49a38;--cream:#f7f8f5;--ink:#1d2927;--muted:#71807b;--line:#e5eae6;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:Tahoma,Arial,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}
+.top{background:var(--green);color:white;padding:14px max(18px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px}.logo{width:42px;height:42px;border-radius:14px;background:var(--orange);display:grid;place-items:center;color:var(--green);font-size:24px}
+.top small{display:block;color:#d6e4df;font-size:11px;font-weight:400;margin-top:3px}.top button{background:#fff;color:var(--green);padding:10px 14px;border-radius:12px;font-weight:700}
+.wrap{max-width:1120px;margin:auto;padding:20px 16px 70px}
+.hero{background:linear-gradient(120deg,#123c3a,#236c62);color:#fff;border-radius:24px;padding:28px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;overflow:hidden;position:relative}
+.hero h1{font-size:clamp(26px,4vw,42px);line-height:1.35;margin:5px 0 10px}.hero p{color:#dcebe6;line-height:1.9;margin:0 0 18px}.hero .tag{color:#ffd49c;font-size:13px;font-weight:700}
+.address{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:7px;border-radius:14px;max-width:560px}.address select,.address input{border:0;outline:0;padding:9px;background:#fff;color:var(--ink);min-width:120px;flex:1}.address button{background:var(--orange);color:#173d38;padding:10px 16px;border-radius:10px;font-weight:800}
+.hero-art{display:grid;place-items:center;font-size:112px;opacity:.95}
+.section-head{display:flex;justify-content:space-between;align-items:end;margin:28px 0 14px;gap:12px}.section-head h2{font-size:21px;margin:0}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.categories{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.cat{background:white;border:1px solid var(--line);border-radius:16px;padding:15px 8px;text-align:center;color:var(--ink);font-weight:700}.cat span{display:block;font-size:30px;margin-bottom:8px}.cat.active{border:2px solid var(--green2);background:#edf6f2}
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:205px}.pic{height:82px;border-radius:13px;background:#f2f5f1;display:grid;place-items:center;font-size:43px;margin-bottom:12px}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted)}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700}
+.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:22px}.panel h3{margin:0 0 12px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.step{background:#f6f8f5;border-radius:13px;padding:14px}.step b{display:block;margin-bottom:5px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
+.footer{background:#102f2d;color:#d8e5e1;text-align:center;padding:22px;font-size:12px}
+.cart-fab{position:fixed;bottom:18px;left:18px;background:var(--orange);color:#173d38;border-radius:50px;padding:14px 19px;font-weight:800;box-shadow:0 8px 25px #0002;z-index:5}
+.overlay{display:none;position:fixed;inset:0;background:#0008;z-index:10;align-items:flex-end;justify-content:center}.overlay.show{display:flex}.drawer{background:white;width:min(100%,560px);max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:22px}.drawer-head{display:flex;justify-content:space-between;align-items:center}.close{background:#edf1ed;border-radius:50%;width:34px;height:34px;font-size:19px}
+.cart-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}.qty button{background:#edf3ef;border-radius:8px;padding:5px 10px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}.admin{display:none}.admin.show{display:block}.order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;background:#e2e8f0;color:#334155}
+.badge.new{background:#fef3c7;color:#92400e}
+.badge.accepted{background:#dbeafe;color:#1e40af}
+.badge.delivered{background:#dcfce7;color:#166534}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2196F3">
+</head>
+<body>
+<header class="top">
+ <div class="brand"><div class="logo">و</div><div>وصّال دسوق<small>طلبك علينا.. لحد باب بيتك</small></div></div>
+ <button onclick="openCart()">🛒 السلة <span id="topCount">0</span></button>
+</header>
+<main class="wrap">
+ <section class="hero">
+  <div><div class="tag">خدمة توصيل محلية في دسوق والقرى المحيطة</div><h1>كل طلباتك.. عند باب بيتك</h1><p>اختار احتياجاتك من الأقسام، ابعت طلبك، ومندوب وصّال يوصله لحد عندك.</p>
+   <div class="address"><select id="area"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى - اكتبها في العنوان</option></select><input id="quickAddress" placeholder="اسم الشارع أو المنطقة"><button onclick="document.getElementById('customerAddress').value=document.getElementById('quickAddress').value;openCart()">اطلب الآن</button></div>
+  </div><div class="hero-art">🛵</div>
+ </section>
+ <div class="section-head"><div><h2>تسوق حسب القسم</h2><p>اختار القسم المناسب لطلبك</p></div></div>
+ <section class="categories" id="categories"></section>
+ <div class="section-head"><div><h2 id="productTitle">منتجات مقترحة</h2><p>الأسعار والمعلومات متصلة بقاعدة البيانات</p></div></div>
+ <section class="products" id="products"></section>
+ <section class="panel"><h3>الطلب من وصّال سهل</h3><div class="steps">
+  <div class="step"><b>① اختار طلبك</b><p>تصفح المنتجات وأضف احتياجاتك إلى السلة.</p></div>
+  <div class="step"><b>② أكد بياناتك</b><p>اكتب اسمك ورقم هاتفك وعنوان التوصيل بالتفصيل.</p></div>
+  <div class="step"><b>③ استلم عند الباب</b><p>سيتواصل معك فريق التشغيل لتأكيد الطلب والتوصيل.</p></div>
+ </div></section>
+ <section class="panel"><h3>للمتاجر والمندوبين</h3><p class="muted">يسعدنا انضمام المحلات والمندوبين إلى شبكة وصّال. يتم إدارة العمليات من خلال لوحة تحكم وصّال.</p><button class="add" onclick="showAdmin()">فتح لوحة التحكم الإدارية</button></section>
+ <section class="panel admin" id="admin"><div class="drawer-head"><h3>لوحة تحكم وصّال (مركز الطلبات)</h3><button class="close" onclick="document.getElementById('admin').classList.remove('show')">×</button></div><div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div></section>
+ <p class="muted" style="text-align:center;margin-top:20px">نظام وصّال دسوق — متصل بقاعدة بيانات Supabase المباشرة.</p>
+</main>
+<footer class="footer">© وصّال دسوق — خدمة دسوق والقرى المحيطة</footer>
+<button class="cart-fab" onclick="openCart()">🛒 سلة الطلب <span id="fabCount">0</span></button>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeCart()"><div class="drawer">
+ <div class="drawer-head"><h2 style="margin:0">سلة مشترياتك</h2><button class="close" onclick="closeCart()">×</button></div>
+ <div id="cartItems"></div><div class="field"><label>منطقة التوصيل</label><select id="checkoutArea"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى</option></select></div>
+ <div class="field"><label>الاسم</label><input id="customerName" placeholder="الاسم بالكامل"></div>
+ <div class="field"><label>رقم الهاتف</label><input id="customerPhone" type="tel" placeholder="01xxxxxxxxx"></div>
+ <div class="field"><label>العنوان بالتفصيل</label><textarea id="customerAddress" rows="2" placeholder="الشارع، رقم المنزل، علامة مميزة"></textarea></div>
+ <div class="field"><label>ملاحظات للطلب (اختياري)</label><textarea id="notes" rows="2" placeholder="أي تفاصيل إضافية"></textarea></div>
+ <p id="total" style="font-weight:800"></p><p class="muted">الدفع نقداً عند الاستلام. رسوم التوصيل يحددها فريق التشغيل بعد تأكيد المنطقة.</p>
+ <button class="submit" id="btnSubmit" onclick="placeOrder()">تأكيد وإرسال الطلب</button>
+</div></div>
+
+<script>
+// Supabase Configuration
+const SUPABASE_URL = "https://ftjwvqjcjncgqonvyjdv.supabase.co";
+const SUPABASE_KEY = "sb_publishable_52V8TEri0EWrESm9AKfRgw_oNtK3qUh";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const catalog=[
+ {id:1,name:"طماطم طازجة",cat:"خضراوات",price:18,unit:"للكيلو",emoji:"🍅"},
+ {id:2,name:"بطاطس",cat:"خضراوات",price:20,unit:"للكيلو",emoji:"🥔"},
+ {id:3,name:"موز",cat:"خضراوات",price:35,unit:"للكيلو",emoji:"🍌"},
+ {id:4,name:"مياه معدنية",cat:"سوبر ماركت",price:12,unit:"للعبوة",emoji:"💧"},
+ {id:5,name:"أرز معبأ",cat:"سوبر ماركت",price:32,unit:"للكيلو",emoji:"🍚"},
+ {id:6,name:"زيت طعام",cat:"سوبر ماركت",price:75,unit:"للعبوة",emoji:"🫒"},
+ {id:7,name:"وجبة برجر",cat:"مطاعم",price:95,unit:"للوجبة",emoji:"🍔"},
+ {id:8,name:"بيتزا وسط",cat:"مطاعم",price:120,unit:"للقطعة",emoji:"🍕"},
+ {id:9,name:"وجبة فراخ",cat:"مطاعم",price:110,unit:"للوجبة",emoji:"🍗"},
+ {id:10,name:"مناديل ورقية",cat:"مستلزمات منزلية",price:25,unit:"للعبوة",emoji:"🧻"},
+ {id:11,name:"مسحوق غسيل",cat:"مستلزمات منزلية",price:85,unit:"للعبوة",emoji:"🧼"},
+ {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"}
+];
+const cats=[["الكل","🛍️"],["سوبر ماركت","🛒"],["مطاعم","🍔"],["صيدليات","🧴"],["خضراوات","🥬"],["مستلزمات منزلية","🧹"],["طلبات خاصة","📦"]];
+let active="الكل",cart={};
+const money=n=>n.toLocaleString("ar-EG")+" ج.م";
+
+function renderCats(){document.getElementById("categories").innerHTML=cats.map(([c,e])=>`<button class="cat ${active===c?'active':''}" onclick="filterCat('${c}')"><span>${e}</span>${c}</button>`).join("")}
+function renderProducts(){let list=active==="الكل"?catalog:catalog.filter(p=>p.cat===active);if(active==="طلبات خاصة")list=[];document.getElementById("productTitle").textContent=active==="الكل"?"منتجات مقترحة":active;document.getElementById("products").innerHTML=list.length?list.map(p=>`<article class="product"><div class="pic">${p.emoji}</div><h3>${p.name}</h3><small>${p.unit}</small><div class="price-row"><span class="price">${money(p.price)}</span><button class="add" onclick="add(${p.id})">+ أضف</button></div></article>`).join(""):`<div class="panel" style="grid-column:1/-1"><b>اطلب ما تحتاجه</b><p class="muted">يمكنك كتابة طلبك الخاص والتفاصيل في ملاحظات السلة وسننفذه لك فوراً.</p><button class="add" onclick="openCart()">أرسل طلباً خاصاً</button></div>`}
+function filterCat(c){active=c;renderCats();renderProducts()}
+function add(id){cart[id]=(cart[id]||0)+1;updateCart()}
+function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];updateCart()}
+function count(){return Object.values(cart).reduce((a,b)=>a+b,0)}
+function updateCart(){document.getElementById("topCount").textContent=count();document.getElementById("fabCount").textContent=count();let rows=Object.entries(cart).map(([id,q])=>{let p=catalog.find(x=>x.id==id);return `<div class="cart-line"><div><b>${p.name}</b><div class="muted">${money(p.price)} × ${q}</div></div><div class="qty"><button onclick="change(${id},-1)">−</button> ${q} <button onclick="change(${id},1)">+</button></div></div>`}).join("");document.getElementById("cartItems").innerHTML=rows||'<p class="muted">السلة فارغة. أضف بعض المنتجات أولاً.</p>';let total=Object.entries(cart).reduce((s,[id,q])=>s+catalog.find(p=>p.id==id).price*q,0);document.getElementById("total").textContent="إجمالي المنتجات: "+money(total)}
+function openCart(){document.getElementById("overlay").classList.add("show");document.getElementById("checkoutArea").value=document.getElementById("area").value;updateCart()}
+function closeCart(){document.getElementById("overlay").classList.remove("show")}
+
+async function placeOrder(){
+ if(!count()){alert("أضف منتجاً واحداً على الأقل إلى السلة.");return}
+ let name=document.getElementById("customerName").value.trim(),phone=document.getElementById("customerPhone").value.trim(),address=document.getElementById("customerAddress").value.trim();
+ if(!name||!phone||!address){alert("من فضلك أكمل الاسم ورقم الهاتف والعنوان.");return}
+
+ const submitBtn = document.getElementById("btnSubmit");
+ submitBtn.disabled = true;
+ submitBtn.textContent = "جاري إرسال الطلب إلى قاعدة البيانات...";
+
+ let items=Object.entries(cart).map(([id,q])=>{let p=catalog.find(x=>x.id==id);return {name:p.name,qty:q,price:p.price}});
+ let orderNum = "WD-" + Date.now().toString().slice(-6);
+ let totalAmount = items.reduce((s,x)=>s+x.qty*x.price,0);
+
+ try {
+   // 1. Insert order header into Supabase
+   const { data: orderData, error: orderErr } = await supabaseClient
+     .from('orders')
+     .insert([{
+       order_number: orderNum,
+       customer_name: name,
+       customer_phone: phone,
+       delivery_area: document.getElementById("checkoutArea").value,
+       delivery_address: address,
+       notes: document.getElementById("notes").value || '',
+       subtotal: totalAmount,
+       delivery_fee: 0,
+       total: totalAmount,
+       status: 'new'
+     }])
+     .select();
+
+   if (orderErr) throw orderErr;
+
+   const createdOrder = orderData[0];
+
+   // 2. Insert items into Supabase
+   const orderItemsData = items.map(item => ({
+     order_id: createdOrder.id,
+     item_name: item.name,
+     quantity: item.qty,
+     unit_price: item.price,
+     total_price: item.qty * item.price
+   }));
+
+   const { error: itemsErr } = await supabaseClient
+     .from('order_items')
+     .insert(orderItemsData);
+
+   if (itemsErr) throw itemsErr;
+
+   alert("✅ تم إرسال طلبك بنجاح وحفظه في قاعدة بيانات Supabase! رقم الطلب: " + orderNum);
+   cart={};updateCart();closeCart();
+   document.getElementById("customerName").value="";document.getElementById("customerPhone").value="";document.getElementById("customerAddress").value="";document.getElementById("notes").value="";
+ } catch(err) {
+   console.error("Supabase Error:", err);
+   alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + (err.message || JSON.stringify(err)));
+ } finally {
+   submitBtn.disabled = false;
+   submitBtn.textContent = "تأكيد وإرسال الطلب";
+ }
+}
+
+async function showAdmin(){
+ let pin=prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
+ if(pin!=="1234") return;
+ 
+ let a=document.getElementById("admin");
+ a.classList.add("show");
+ fetchOrdersFromSupabase();
+}
+
+async function fetchOrdersFromSupabase(){
+ const listDiv = document.getElementById("ordersList");
+ listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات من Supabase...</p>";
+ 
+ try {
+   const { data: orders, error } = await supabaseClient
+     .from('orders')
+     .select('*, order_items(*)')
+     .order('created_at', { ascending: false });
+
+   if (error) throw error;
+
+   if(!orders || orders.length === 0){
+     listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة في قاعدة البيانات بعد.</p>";
+     return;
+   }
+
+   listDiv.innerHTML = orders.map(o => {
+     const statusBadge = o.status === 'new' ? '<span class="badge new">جديد</span>' : 
+                          o.status === 'accepted' ? '<span class="badge accepted">قيد التجهيز</span>' : 
+                          o.status === 'delivered' ? '<span class="badge delivered">تم التوصيل</span>' : 
+                          '<span class="badge canceled" style="background-color: #f44336; color: white; padding: 4px 8px; border-radius: 4px;">ملغي</span>';
+     
+     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "لا توجد تفاصيل";
+     const dateFormatted = new Date(o.created_at).toLocaleString('ar-EG');
+
+     return `<div class="order">
+       <b>${o.order_number}</b> ${statusBadge} — <small>${dateFormatted}</small><br>
+       <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+       <div class="mb-3">
+  <label for="orderStore" class="form-label">المتجر</label>
+  <select id="orderStore" class="form-select">
+    <option value="">جاري تحميل المتاجر...</option>
+  </select>
+</div>
+       <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+       <b>المنتجات:</b> ${itemsList}<br>
+       <b>الإجمالي:</b> ${money(o.total)}<br>
+       ${o.notes ? `<b>ملاحظات:</b> ${o.notes}` : ''}
+  <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #eee; display: flex; gap: 8px; flex-wrap: wrap;">
+  <button onclick="updateOrderStatus('${o.id || order.id}', 'accepted')" style="background-color: #2196F3; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit;">
+    ⏳ قيد التجهيز
+  </button>
+
+  <button onclick="updateOrderStatus('${o.id || order.id}', 'delivered')" style="background-color: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit;">
+    ✅ تم التوصيل
+  </button>
+
+  <button onclick="updateOrderStatus('${o.id || order.id}', 'canceled')" style="background-color: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit;">
+    ❌ إلغاء الطلب
+   </button>
+</div>
+     </div>`;
+   }).join("");
+
+ } catch(err) {
+   console.error(err);
+   listDiv.innerHTML = "<p style='color:red;'>حدث خطأ أثناء جلب الطلبات: " + err.message + "</p>";
+ }
+}
+
+renderCats();renderProducts();updateCart();
+document.querySelector(".brand").style.cursor="pointer";
+document.querySelector(".brand").addEventListener("dblclick",showAdmin);
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const { error } = await supabaseClient
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    alert("تم تحديث حالة الطلب بنجاح! ✅");
+   // دالة لجلب وعرض الطلبات بشكل سليم ومستقر
+async function fetchOrdersFromSupabase() {
+  const { data: orders, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('خطأ في جلب الطلبات:', error);
+    return;
+  }
+
+  const ordersContainer = document.getElementById('ordersContainer');
+  if (!ordersContainer) return;
+
+  ordersContainer.innerHTML = '';
+  
+  orders.forEach(order => {
+    ordersContainer.innerHTML += `
+      <div class="order-card">
+        <p><strong>رقم الطلب:</strong> ${order.id}</p>
+        <p><strong>العميل:</strong> ${order.customer_name} | <strong>الهاتف:</strong> ${order.phone}</p>
+        <p><strong>العنوان:</strong> ${order.address}</p>
+        <p><strong>الإجمالي:</strong> ${order.total} ج.م</p>
+      </div>
+    `;
+  });
+}
+
+// دالة تحديث حالة الطلب
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    alert("تم تحديث حالة الطلب بنجاح! ✅");
+    fetchOrdersFromSupabase(); // إعادة جلب الطلبات لتحديث الشاشة فوراً
+  } catch (err) {
+    alert("حدث خطأ أثناء التحديث: " + err.message);
+  }
+}
+
+// تشغيل جلب الطلبات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+  fetchOrdersFromSupabase();
+});
+</script>
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const { error } = await supabaseClient
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    alert("تم تحديث حالة الطلب بنجاح! ✅");
+    fetchOrdersFromSupabase(); // إعادة جلب الطلبات لتحديث الشاشة فوراً
+  } catch (err) {
+    alert("حدث خطأ أثناء التحديث: " + err.message);
+  }
+}
+</body></html>
