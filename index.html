@@ -27,7 +27,8 @@
 .cart-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}.qty button{background:#edf3ef;border-radius:8px;padding:5px 10px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}.admin{display:none}.admin.show{display:block}.order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px}
 .badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;background:#e2e8f0;color:#334155}
 .badge.new{background:#fef3c7;color:#92400e}
-.badge.accepted{background:#dbeafe;color:#1e40af}
+.badge.accepted,.badge.preparing{background:#dbeafe;color:#1e40af}
+.badge.delivering{background:#ede9fe;color:#5b21b6}
 .badge.delivered{background:#dcfce7;color:#166534}
 @media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
@@ -82,10 +83,11 @@
 </div></div>
 
 <script>
-// Supabase Configuration
 const SUPABASE_URL = "https://ftjwvqjcjncgqonvyjdv.supabase.co";
 const SUPABASE_KEY = "sb_publishable_52V8TEri0EWrESm9AKfRgw_oNtK3qUh";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const CART_STORAGE_KEY = "wassal_cart_v1";
 
 const catalog=[
  {id:1,name:"طماطم طازجة",cat:"خضراوات",price:18,unit:"للكيلو",emoji:"🍅"},
@@ -102,10 +104,25 @@ const catalog=[
  {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"}
 ];
 
-let cart={};
-const money=n=>n.toLocaleString("ar-EG")+" ج.م";
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
 
-// جلب وعرض المتاجر من سوبابيس
+function saveCart(items) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch (_) {}
+}
+
+let cartItems = loadCart();
+const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
+
 async function fetchStores() {
   try {
     const { data: stores, error } = await supabaseClient
@@ -128,7 +145,7 @@ async function fetchStores() {
           ${!store.image_url ? '🏪' : ''}
         </div>
         <h3>${store.name}</h3>
-        <small>التصنيف: ${store.category}</small>
+        <small>التصنيف: ${store.category || 'عام'}</small>
         <div class="price-row">
           <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
             ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
@@ -143,76 +160,132 @@ async function fetchStores() {
 }
 
 function renderProducts(){
-  let list = catalog;
-  document.getElementById("products").innerHTML = list.map(p=>`
+  document.getElementById("products").innerHTML = catalog.map(p=>`
     <article class="product">
       <div class="pic">${p.emoji}</div>
       <h3>${p.name}</h3>
       <small>${p.unit}</small>
       <div class="price-row">
         <span class="price">${money(p.price)}</span>
-        <button class="add" onclick="add(${p.id})">+ أضف</button>
+        <button class="add" onclick="addCatalogItem(${p.id})">+ أضف</button>
       </div>
     </article>
   `).join("");
 }
 
-function add(id){cart[id]=(cart[id]||0)+1;updateCart()}
-function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];updateCart()}
-function count(){return Object.values(cart).reduce((a,b)=>a+b,0)}
+function addCatalogItem(id){
+  const p = catalog.find(x => x.id === id);
+  if (!p) return;
+  const key = `cat_${p.id}`;
+  const existing = cartItems.find(x => x.key === key);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cartItems.push({
+      key,
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      unit: p.unit,
+      qty: 1,
+      store_id: null
+    });
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function changeItemQty(key, delta){
+  const idx = cartItems.findIndex(x => x.key === key);
+  if (idx === -1) return;
+  cartItems[idx].qty += delta;
+  if (cartItems[idx].qty <= 0) {
+    cartItems.splice(idx, 1);
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function totalCount(){
+  return cartItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+}
+
 function updateCart(){
-  document.getElementById("topCount").textContent=count();
-  document.getElementById("fabCount").textContent=count();
-  let rows=Object.entries(cart).map(([id,q])=>{
-    let p=catalog.find(x=>x.id==id);
-    return `<div class="cart-line"><div><b>${p.name}</b><div class="muted">${money(p.price)} × ${q}</div></div><div class="qty"><button onclick="change(${id},-1)">−</button> ${q} <button onclick="change(${id},1)">+</button></div></div>`;
-  }).join("");
-  document.getElementById("cartItems").innerHTML=rows||'<p class="muted">السلة فارغة. أضف بعض المنتجات أولاً.</p>';
-  let total=Object.entries(cart).reduce((s,[id,q])=>s+catalog.find(p=>p.id==id).price*q,0);
-  document.getElementById("total").textContent="إجمالي المنتجات: "+money(total);
+  const count = totalCount();
+  document.getElementById("topCount").textContent = count;
+  document.getElementById("fabCount").textContent = count;
+
+  if (!cartItems.length) {
+    document.getElementById("cartItems").innerHTML = '<p class="muted">السلة فارغة. أضف بعض المنتجات أولاً.</p>';
+    document.getElementById("total").textContent = "إجمالي المنتجات: " + money(0);
+    return;
+  }
+
+  const rows = cartItems.map(item => `
+    <div class="cart-line">
+      <div>
+        <b>${item.name}</b>
+        <div class="muted">${money(item.price)} × ${item.qty}</div>
+      </div>
+      <div class="qty">
+        <button onclick="changeItemQty('${item.key}', -1)">−</button>
+        ${item.qty}
+        <button onclick="changeItemQty('${item.key}', 1)">+</button>
+      </div>
+    </div>
+  `).join("");
+
+  document.getElementById("cartItems").innerHTML = rows;
+  const total = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+  document.getElementById("total").textContent = "إجمالي المنتجات: " + money(total);
 }
 
 function openCart(){
   document.getElementById("overlay").classList.add("show");
-  document.getElementById("checkoutArea").value=document.getElementById("area").value;
+  document.getElementById("checkoutArea").value = document.getElementById("area").value;
   updateCart();
 }
 function closeCart(){document.getElementById("overlay").classList.remove("show")}
 
 async function placeOrder(){
- if(!count()){alert("أضف منتجاً واحداً على الأقل إلى السلة.");return}
- let name=document.getElementById("customerName").value.trim(),phone=document.getElementById("customerPhone").value.trim(),address=document.getElementById("customerAddress").value.trim();
- if(!name||!phone||!address){alert("من فضلك أكمل الاسم ورقم الهاتف والعنوان.");return}
+ if(!totalCount()){alert("أضف منتجاً واحداً على الأقل إلى السلة.");return}
+ const name = document.getElementById("customerName").value.trim();
+ const phone = document.getElementById("customerPhone").value.trim();
+ const address = document.getElementById("customerAddress").value.trim();
+ if(!name || !phone || !address){alert("من فضلك أكمل الاسم ورقم الهاتف والعنوان.");return}
 
  const submitBtn = document.getElementById("btnSubmit");
  submitBtn.disabled = true;
  submitBtn.textContent = "جاري إرسال الطلب...";
 
- let items=Object.entries(cart).map(([id,q])=>{let p=catalog.find(x=>x.id==id);return {name:p.name,qty:q,price:p.price}});
- let orderNum = "WD-" + Date.now().toString().slice(-6);
- let totalAmount = items.reduce((s,x)=>s+x.qty*x.price,0);
+ const orderNum = "WD-" + Date.now().toString().slice(-6);
+ const totalAmount = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+ const firstStoreId = cartItems.find(item => item.store_id)?.store_id || null;
 
  try {
+   const orderPayload = {
+     order_number: orderNum,
+     customer_name: name,
+     customer_phone: phone,
+     delivery_area: document.getElementById("checkoutArea").value,
+     delivery_address: address,
+     notes: document.getElementById("notes").value || '',
+     subtotal: totalAmount,
+     delivery_fee: 0,
+     total: totalAmount,
+     status: 'new'
+   };
+   if (firstStoreId) orderPayload.store_id = firstStoreId;
+
    const { data: orderData, error: orderErr } = await supabaseClient
      .from('orders')
-     .insert([{
-       order_number: orderNum,
-       customer_name: name,
-       customer_phone: phone,
-       delivery_area: document.getElementById("checkoutArea").value,
-       delivery_address: address,
-       notes: document.getElementById("notes").value || '',
-       subtotal: totalAmount,
-       delivery_fee: 0,
-       total: totalAmount,
-       status: 'new'
-     }])
+     .insert([orderPayload])
      .select();
 
    if (orderErr) throw orderErr;
    const createdOrder = orderData[0];
 
-   const orderItemsData = items.map(item => ({
+   const orderItemsData = cartItems.map(item => ({
      order_id: createdOrder.id,
      item_name: item.name,
      quantity: item.qty,
@@ -224,11 +297,14 @@ async function placeOrder(){
    if (itemsErr) throw itemsErr;
 
    alert("✅ تم إرسال طلبك بنجاح! رقم الطلب: " + orderNum);
-   cart={}; updateCart(); closeCart();
-   document.getElementById("customerName").value="";
-   document.getElementById("customerPhone").value="";
-   document.getElementById("customerAddress").value="";
-   document.getElementById("notes").value="";
+   cartItems = [];
+   saveCart(cartItems);
+   updateCart();
+   closeCart();
+   document.getElementById("customerName").value = "";
+   document.getElementById("customerPhone").value = "";
+   document.getElementById("customerAddress").value = "";
+   document.getElementById("notes").value = "";
  } catch(err) {
    console.error("Supabase Error:", err);
    alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + err.message);
@@ -238,9 +314,21 @@ async function placeOrder(){
  }
 }
 
+function getStatusLabel(status) {
+  const map = {
+    new: '<span class="badge new">جديد</span>',
+    accepted: '<span class="badge accepted">مقبول</span>',
+    preparing: '<span class="badge preparing">قيد التجهيز</span>',
+    delivering: '<span class="badge delivering">جاري التوصيل</span>',
+    delivered: '<span class="badge delivered">تم التوصيل</span>',
+    canceled: '<span class="badge" style="background:#f44336;color:white">ملغي</span>'
+  };
+  return map[status] || `<span class="badge">${status}</span>`;
+}
+
 async function showAdmin(){
- let pin=prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
- if(pin!=="1234") return;
+ const pin = prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
+ if(pin !== "1234") return;
  document.getElementById("admin").classList.add("show");
  fetchOrdersFromSupabase();
 }
@@ -262,24 +350,20 @@ async function fetchOrdersFromSupabase(){
    }
 
    listDiv.innerHTML = orders.map(o => {
-     const statusBadge = o.status === 'new' ? '<span class="badge new">جديد</span>' : 
-                          o.status === 'accepted' ? '<span class="badge accepted">قيد التجهيز</span>' : 
-                          o.status === 'delivered' ? '<span class="badge delivered">تم التوصيل</span>' : 
-                          '<span class="badge" style="background:#f44336;color:white">ملغي</span>';
-     
      const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
 
      return `<div class="order">
-       <b>${o.order_number}</b> ${statusBadge} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+       <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
        <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
        <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
        <b>المنتجات:</b> ${itemsList}<br>
        <b>الإجمالي:</b> ${money(o.total)}<br>
        ${o.notes ? `<b>ملاحظات:</b> ${o.notes}` : ''}
-       <div style="margin-top: 10px; display: flex; gap: 6px;">
-         <button onclick="updateOrderStatus('${o.id}', 'accepted')" style="background:#2196F3;color:white;padding:4px 8px;border-radius:4px">قيد التجهيز</button>
-         <button onclick="updateOrderStatus('${o.id}', 'delivered')" style="background:#4CAF50;color:white;padding:4px 8px;border-radius:4px">تم التوصيل</button>
-         <button onclick="updateOrderStatus('${o.id}', 'canceled')" style="background:#f44336;color:white;padding:4px 8px;border-radius:4px">إلغاء</button>
+       <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+         <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">قيد التجهيز</button>
+         <button onclick="updateOrderStatus('${o.id}', 'delivering')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاري التوصيل</button>
+         <button onclick="updateOrderStatus('${o.id}', 'delivered')" style="background:#4CAF50;color:white;padding:5px 9px;border-radius:6px">تم التوصيل</button>
+         <button onclick="updateOrderStatus('${o.id}', 'canceled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء</button>
        </div>
      </div>`;
    }).join("");
@@ -299,15 +383,14 @@ async function updateOrderStatus(orderId, newStatus) {
   }
 }
 
-// التشغيل التلقائي عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', () => {
   fetchStores();
   renderProducts();
   updateCart();
 });
 
-document.querySelector(".brand").style.cursor="pointer";
-document.querySelector(".brand").addEventListener("dblclick",showAdmin);
+document.querySelector(".brand").style.cursor = "pointer";
+document.querySelector(".brand").addEventListener("dblclick", showAdmin);
 </script>
 </body>
 </html>

@@ -14,7 +14,7 @@
 .top small{display:block;color:#d6e4df;font-size:11px;font-weight:400;margin-top:3px}.top button{background:#fff;color:var(--green);padding:10px 14px;border-radius:12px;font-weight:700}
 .wrap{max-width:1120px;margin:auto;padding:20px 16px 70px}
 .store-header{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:20px;box-shadow:0 4px 10px rgba(0,0,0,0.03)}
-.store-img{width:100px;height:100px;border-radius:16px;object-fit:cover;background:#eee}
+.store-img{width:100px;height:100px;border-radius:16px;object-fit:cover;background:#e8efec;display:grid;place-items:center;font-size:38px;overflow:hidden}
 .store-info h1{margin:0 0 8px;font-size:24px}.store-info p{margin:0;color:var(--muted);font-size:14px}
 .products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:205px}
@@ -44,7 +44,7 @@
  </div>
 
  <section class="store-header">
-  <img id="storeImg" class="store-img" src="https://via.placeholder.com/100" alt="المتجر">
+  <div id="storeImgBox" class="store-img">🏪</div>
   <div class="store-info">
    <h1 id="storeName">جاري التحميل...</h1>
    <p id="storeCategory">التصنيف: ...</p>
@@ -74,12 +74,30 @@ const SUPABASE_URL = "https://ftjwvqjcjncgqonvyjdv.supabase.co";
 const SUPABASE_KEY = "sb_publishable_52V8TEri0EWrESm9AKfRgw_oNtK3qUh";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const CART_STORAGE_KEY = "wassal_cart_v1";
 const urlParams = new URLSearchParams(window.location.search);
 const storeId = urlParams.get('id');
 
 let productsList = [];
-let cart = {};
-const money = n => n.toLocaleString("ar-EG") + " ج.م";
+const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
+
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveCart(items) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch (_) {}
+}
+
+let cartItems = loadCart();
 
 async function loadStoreData() {
   if (!storeId) {
@@ -88,7 +106,6 @@ async function loadStoreData() {
     return;
   }
 
-  // 1. جلب بيانات المتجر
   const { data: store, error: storeErr } = await supabaseClient
     .from('stores')
     .select('*')
@@ -97,14 +114,18 @@ async function loadStoreData() {
 
   if (storeErr || !store) {
     console.error(storeErr);
+    document.getElementById('storeName').textContent = "تعذر العثور على المتجر";
     return;
   }
 
   document.getElementById('storeName').textContent = store.name;
-  document.getElementById('storeCategory').textContent = "التصنيف: " + store.category;
-  if (store.image_url) document.getElementById('storeImg').src = store.image_url;
+  document.getElementById('storeCategory').textContent = "التصنيف: " + (store.category || 'عام');
 
-  // 2. جلب منتجات المتجر
+  const imgBox = document.getElementById('storeImgBox');
+  if (store.image_url) {
+    imgBox.innerHTML = `<img src="${store.image_url}" alt="${store.name}" style="width:100%;height:100%;object-fit:cover;border-radius:16px">`;
+  }
+
   const { data: products, error: prodErr } = await supabaseClient
     .from('products')
     .select('*')
@@ -127,62 +148,119 @@ async function loadStoreData() {
       <small>${p.unit || 'للقطعة'}</small>
       <div class="price-row">
         <span class="price">${money(p.price)}</span>
-        <button class="add" onclick="add('${p.id}')">+ أضف</button>
+        <button class="add" onclick="addStoreProduct('${p.id}')">+ أضف</button>
       </div>
     </article>
   `).join("");
 }
 
-function add(id){cart[id]=(cart[id]||0)+1;updateCart()}
-function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];updateCart()}
-function count(){return Object.values(cart).reduce((a,b)=>a+b,0)}
+function addStoreProduct(id){
+  const p = productsList.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const key = `prod_${p.id}`;
+  const existing = cartItems.find(x => x.key === key);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cartItems.push({
+      key,
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      unit: p.unit || 'للقطعة',
+      qty: 1,
+      store_id: storeId || p.store_id || null
+    });
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function changeItemQty(key, delta){
+  const idx = cartItems.findIndex(x => x.key === key);
+  if (idx === -1) return;
+  cartItems[idx].qty += delta;
+  if (cartItems[idx].qty <= 0) {
+    cartItems.splice(idx, 1);
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function totalCount(){
+  return cartItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+}
 
 function updateCart(){
-  document.getElementById("topCount").textContent=count();
-  document.getElementById("fabCount").textContent=count();
-  let rows=Object.entries(cart).map(([id,q])=>{
-    let p=productsList.find(x=>x.id==id);
-    return `<div class="cart-line"><div><b>${p.name}</b><div class="muted">${money(p.price)} × ${q}</div></div><div class="qty"><button onclick="change('${id}',-1)">−</button> ${q} <button onclick="change('${id}',1)">+</button></div></div>`;
-  }).join("");
-  document.getElementById("cartItems").innerHTML=rows||'<p class="muted">السلة فارغة.</p>';
-  let total=Object.entries(cart).reduce((s,[id,q])=>s+productsList.find(p=>p.id==id).price*q,0);
-  document.getElementById("total").textContent="إجمالي الطلب: "+money(total);
+  const count = totalCount();
+  document.getElementById("topCount").textContent = count;
+  document.getElementById("fabCount").textContent = count;
+
+  if (!cartItems.length) {
+    document.getElementById("cartItems").innerHTML = '<p class="muted">السلة فارغة.</p>';
+    document.getElementById("total").textContent = "إجمالي الطلب: " + money(0);
+    return;
+  }
+
+  const rows = cartItems.map(item => `
+    <div class="cart-line">
+      <div>
+        <b>${item.name}</b>
+        <div class="muted">${money(item.price)} × ${item.qty}</div>
+      </div>
+      <div class="qty">
+        <button onclick="changeItemQty('${item.key}', -1)">−</button>
+        ${item.qty}
+        <button onclick="changeItemQty('${item.key}', 1)">+</button>
+      </div>
+    </div>
+  `).join("");
+
+  document.getElementById("cartItems").innerHTML = rows;
+  const total = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+  document.getElementById("total").textContent = "إجمالي الطلب: " + money(total);
 }
 
 function openCart(){document.getElementById("overlay").classList.add("show");updateCart()}
 function closeCart(){document.getElementById("overlay").classList.remove("show")}
 
 async function placeOrder(){
- if(!count()){alert("أضف منتجاً أولاً.");return}
- let name=document.getElementById("customerName").value.trim(),phone=document.getElementById("customerPhone").value.trim(),address=document.getElementById("customerAddress").value.trim();
- if(!name||!phone||!address){alert("يرجى إكمال البيانات.");return}
+ if(!totalCount()){alert("أضف منتجاً أولاً.");return}
+ const name = document.getElementById("customerName").value.trim();
+ const phone = document.getElementById("customerPhone").value.trim();
+ const address = document.getElementById("customerAddress").value.trim();
+ if(!name || !phone || !address){alert("يرجى إكمال البيانات.");return}
 
  const submitBtn = document.getElementById("btnSubmit");
  submitBtn.disabled = true;
 
- let items=Object.entries(cart).map(([id,q])=>{let p=productsList.find(x=>x.id==id);return {name:p.name,qty:q,price:p.price}});
- let orderNum = "WD-" + Date.now().toString().slice(-6);
- let totalAmount = items.reduce((s,x)=>s+x.qty*x.price,0);
+ const orderNum = "WD-" + Date.now().toString().slice(-6);
+ const totalAmount = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+ const resolvedStoreId = storeId || cartItems.find(item => item.store_id)?.store_id || null;
 
  try {
+   const orderPayload = {
+     order_number: orderNum,
+     customer_name: name,
+     customer_phone: phone,
+     delivery_area: document.getElementById("checkoutArea").value,
+     delivery_address: address,
+     notes: document.getElementById("notes").value || '',
+     subtotal: totalAmount,
+     delivery_fee: 0,
+     total: totalAmount,
+     status: 'new'
+   };
+   if (resolvedStoreId) orderPayload.store_id = resolvedStoreId;
+
    const { data: orderData, error: orderErr } = await supabaseClient
      .from('orders')
-     .insert([{
-       order_number: orderNum,
-       customer_name: name,
-       customer_phone: phone,
-       delivery_area: document.getElementById("checkoutArea").value,
-       delivery_address: address,
-       notes: document.getElementById("notes").value || '',
-       subtotal: totalAmount,
-       delivery_fee: 0,
-       total: totalAmount,
-       status: 'new'
-     }]).select();
+     .insert([orderPayload])
+     .select();
 
    if (orderErr) throw orderErr;
 
-   const orderItemsData = items.map(item => ({
+   const orderItemsData = cartItems.map(item => ({
      order_id: orderData[0].id,
      item_name: item.name,
      quantity: item.qty,
@@ -190,10 +268,14 @@ async function placeOrder(){
      total_price: item.qty * item.price
    }));
 
-   await supabaseClient.from('order_items').insert(orderItemsData);
+   const { error: itemsErr } = await supabaseClient.from('order_items').insert(orderItemsData);
+   if (itemsErr) throw itemsErr;
 
-   alert("✅ تم إرسال الطلب بنجاح! رقم الطلب: " + orderNum);
-   cart={}; updateCart(); closeCart();
+   alert("✅ تم إرسال طلبك بنجاح! رقم الطلب: " + orderNum);
+   cartItems = [];
+   saveCart(cartItems);
+   updateCart();
+   closeCart();
  } catch(err) {
    alert("خطأ: " + err.message);
  } finally {
@@ -201,7 +283,10 @@ async function placeOrder(){
  }
 }
 
-document.addEventListener('DOMContentLoaded', loadStoreData);
+document.addEventListener('DOMContentLoaded', () => {
+  updateCart();
+  loadStoreData();
+});
 </script>
 </body>
 </html>
