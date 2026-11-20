@@ -275,6 +275,30 @@
     <button class="close" onclick="closeAdmin()">×</button>
   </div>
   <div class="promo-admin-box">
+    <b>➕ إضافة متجر أو مطعم جديد</b>
+    <div class="promo-admin-grid" style="grid-template-columns:repeat(4,1fr)">
+      <input id="newStoreName" placeholder="اسم المتجر أو المطعم">
+      <select id="newStoreCategory">
+        <option value="سوبر ماركت">سوبر ماركت</option>
+        <option value="مطاعم">مطاعم</option>
+        <option value="صيدليات">صيدليات</option>
+        <option value="مخابز">مخابز</option>
+      </select>
+      <input id="newStoreImage" placeholder="رابط الصورة (اختياري)">
+      <button type="button" onclick="createNewStore()" style="background:var(--green);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">إضافة الجهة</button>
+    </div>
+  </div>
+  <div class="promo-admin-box">
+    <b>📦 إضافة منتج لمتجر أو مطعم</b>
+    <div class="promo-admin-grid" style="grid-template-columns:repeat(5,1fr)">
+      <select id="newProductStoreId"></select>
+      <input id="newProductName" placeholder="اسم المنتج">
+      <input id="newProductPrice" type="number" min="1" step="0.5" placeholder="السعر (ج.م)">
+      <input id="newProductUnit" placeholder="الوحدة (مثال: للقطعة)">
+      <button type="button" onclick="createNewProduct()" style="background:var(--green2);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">إضافة المنتج</button>
+    </div>
+  </div>
+  <div class="promo-admin-box">
     <b>🏪 التحكم السريع في فتح وإغلاق المتاجر والمطاعم</b>
     <div id="adminStoresStatusList" style="margin-top:8px"></div>
   </div>
@@ -581,6 +605,62 @@ function renderAdminStoresStatusList() {
   }).join("");
 }
 
+function populateProductStoreSelect() {
+  const select = document.getElementById("newProductStoreId");
+  if (!select) return;
+  if (!allStoresList.length) {
+    select.innerHTML = '<option value="">لا توجد متاجر متاحة</option>';
+    return;
+  }
+  select.innerHTML = allStoresList
+    .map(s => `<option value="${s.id}">${s.name} (${s.category || 'متجر'})</option>`)
+    .join("");
+}
+
+async function createNewStore() {
+  const name = String(document.getElementById("newStoreName")?.value || "").trim();
+  const category = document.getElementById("newStoreCategory")?.value || "سوبر ماركت";
+  const imageUrl = String(document.getElementById("newStoreImage")?.value || "").trim();
+
+  if (!name) { alert("أدخل اسم المتجر أو المطعم أولاً."); return; }
+
+  const payload = { name, category, status: "open" };
+  if (imageUrl) payload.image_url = imageUrl;
+
+  const { error } = await supabaseClient.from("stores").insert([payload]);
+  if (error) { alert("تعذر إضافة المتجر: " + error.message); return; }
+
+  document.getElementById("newStoreName").value = "";
+  document.getElementById("newStoreImage").value = "";
+  await fetchStores();
+  populateProductStoreSelect();
+  alert("تمت إضافة المتجر/المطعم بنجاح ✅");
+}
+
+async function createNewProduct() {
+  const storeIdVal = document.getElementById("newProductStoreId")?.value || "";
+  const name = String(document.getElementById("newProductName")?.value || "").trim();
+  const price = Number(document.getElementById("newProductPrice")?.value || 0);
+  const unit = String(document.getElementById("newProductUnit")?.value || "للقطعة").trim() || "للقطعة";
+
+  if (!storeIdVal) { alert("اختر المتجر أو المطعم أولاً."); return; }
+  if (!name || price <= 0) { alert("أدخل اسم المنتج وسعراً صحيحاً."); return; }
+
+  const { error } = await supabaseClient.from("products").insert([{
+    store_id: storeIdVal,
+    name,
+    price,
+    unit
+  }]);
+
+  if (error) { alert("تعذر إضافة المنتج: " + error.message); return; }
+
+  document.getElementById("newProductName").value = "";
+  document.getElementById("newProductPrice").value = "";
+  document.getElementById("newProductUnit").value = "";
+  alert("تمت إضافة المنتج للمتجر بنجاح ✅");
+}
+
 function onStoreOwnerSelectionChange() {
   renderStoreOwnerStatusBar();
   fetchStoreOwnerOrders();
@@ -610,6 +690,7 @@ async function toggleStoreStatus(storeId, currentStatus) {
     await fetchStores();
     renderStoreOwnerStatusBar();
     renderAdminStoresStatusList();
+    populateProductStoreSelect();
     updateCart();
     alert(isStoreOpenStatus(updatedStatus) ? "تم فتح المتجر بنجاح 🟢" : "تم إغلاق المتجر بنجاح 🔴");
   } catch (err) {
@@ -1337,6 +1418,7 @@ async function fetchStores() {
     renderFeaturedRestaurants(restaurantStores);
     renderStoreOwnerStatusBar();
     renderAdminStoresStatusList();
+    populateProductStoreSelect();
     updateCart();
   } catch (err) {
     console.error('خطأ في جلب المتاجر:', err);
@@ -1749,6 +1831,7 @@ async function showAdmin(){
  document.getElementById("courierPanel").classList.remove("show");
  document.getElementById("admin").classList.add("show");
  renderAdminStoresStatusList();
+ populateProductStoreSelect();
  renderAdminPromoList();
  updateSoundButtons();
  subscribeOrdersRealtime();
