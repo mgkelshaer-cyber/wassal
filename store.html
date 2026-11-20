@@ -26,7 +26,11 @@
 .overlay{display:none;position:fixed;inset:0;background:#0008;z-index:10;align-items:flex-end;justify-content:center}.overlay.show{display:flex}
 .drawer{background:white;width:min(100%,560px);max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:22px}
 .drawer-head{display:flex;justify-content:space-between;align-items:center}.close{background:#edf1ed;border-radius:50%;width:34px;height:34px;font-size:19px}
-.cart-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}.qty button{background:#edf3ef;border-radius:8px;padding:5px 10px}
+.cart-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}.qty{display:flex;align-items:center;gap:6px}.qty button{background:#edf3ef;border-radius:8px;padding:5px 10px}
+.store-box{background:#f4f8f6;border:1px solid #d7e5df;border-radius:12px;padding:10px 12px;margin:12px 0;font-size:12px;line-height:1.7}
+.warn-box{background:#fff8eb;border:1px solid #f4cf8a;color:#7a4f01;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11px}
+.summary-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
+.summary-row{display:flex;justify-content:space-between;margin:5px 0}
 .field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}
 .submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}
 @media(max-width:760px){.products{grid-template-columns:repeat(2,1fr)}.store-header{flex-direction:column;text-align:center}}
@@ -59,13 +63,15 @@
 
 <div class="overlay" id="overlay" onclick="if(event.target===this)closeCart()"><div class="drawer">
  <div class="drawer-head"><h2 style="margin:0">سلة مشترياتك</h2><button class="close" onclick="closeCart()">×</button></div>
+ <div id="storeContextBox"></div>
  <div id="cartItems"></div>
+ <div class="summary-box" id="cartSummary"></div>
  <div class="field"><label>منطقة التوصيل</label><select id="checkoutArea"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى</option></select></div>
  <div class="field"><label>الاسم</label><input id="customerName" placeholder="الاسم بالكامل"></div>
  <div class="field"><label>رقم الهاتف</label><input id="customerPhone" type="tel" placeholder="01xxxxxxxxx"></div>
  <div class="field"><label>العنوان بالتفصيل</label><textarea id="customerAddress" rows="2" placeholder="الشارع، رقم المنزل، علامة مميزة"></textarea></div>
  <div class="field"><label>ملاحظات للطلب (اختياري)</label><textarea id="notes" rows="2" placeholder="أي تفاصيل إضافية"></textarea></div>
- <p id="total" style="font-weight:800"></p>
+ <p class="muted">الدفع نقداً عند الاستلام. رسوم التوصيل يحددها فريق التشغيل بعد تأكيد المنطقة.</p>
  <button class="submit" id="btnSubmit" onclick="placeOrder()">تأكيد وإرسال الطلب</button>
 </div></div>
 
@@ -78,6 +84,7 @@ const CART_STORAGE_KEY = "wassal_cart_v1";
 const urlParams = new URLSearchParams(window.location.search);
 const storeId = urlParams.get('id');
 
+let currentStoreName = "";
 let productsList = [];
 const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
 
@@ -99,6 +106,30 @@ function saveCart(items) {
 
 let cartItems = loadCart();
 
+function getCartStoreInfo() {
+  if (!cartItems.length) {
+    return { label: "لا توجد عناصر بعد", hasMixedSources: false };
+  }
+  const ids = cartItems.map(i => i.store_id || null);
+  const uniqueStores = [...new Set(ids.filter(Boolean))];
+  const hasNull = ids.some(id => !id);
+
+  if (uniqueStores.length === 1 && !hasNull) {
+    const sid = uniqueStores[0];
+    const namePart = (String(sid) === String(storeId) && currentStoreName)
+      ? `${currentStoreName}`
+      : `متجر (${sid})`;
+    return { label: `متجر: ${namePart}`, hasMixedSources: false };
+  }
+  if (uniqueStores.length === 0 && hasNull) {
+    return { label: "منتجات مقترحة (طلب عام)", hasMixedSources: false };
+  }
+  return {
+    label: "عناصر من أكثر من مصدر أو متجر",
+    hasMixedSources: true
+  };
+}
+
 async function loadStoreData() {
   if (!storeId) {
     alert("لم يتم تحديد متجر!");
@@ -118,6 +149,7 @@ async function loadStoreData() {
     return;
   }
 
+  currentStoreName = store.name || "";
   document.getElementById('storeName').textContent = store.name;
   document.getElementById('storeCategory').textContent = "التصنيف: " + (store.category || 'عام');
 
@@ -125,6 +157,8 @@ async function loadStoreData() {
   if (store.image_url) {
     imgBox.innerHTML = `<img src="${store.image_url}" alt="${store.name}" style="width:100%;height:100%;object-fit:cover;border-radius:16px">`;
   }
+
+  updateCart();
 
   const { data: products, error: prodErr } = await supabaseClient
     .from('products')
@@ -196,21 +230,36 @@ function updateCart(){
   document.getElementById("topCount").textContent = count;
   document.getElementById("fabCount").textContent = count;
 
+  const storeInfo = getCartStoreInfo();
+  const contextBox = document.getElementById("storeContextBox");
+  const summaryBox = document.getElementById("cartSummary");
+
   if (!cartItems.length) {
+    contextBox.innerHTML = "";
     document.getElementById("cartItems").innerHTML = '<p class="muted">السلة فارغة.</p>';
-    document.getElementById("total").textContent = "إجمالي الطلب: " + money(0);
+    summaryBox.innerHTML = `
+      <div class="summary-row"><span>عدد القطع</span><b>0</b></div>
+      <div class="summary-row"><span>إجمالي الطلب</span><b>${money(0)}</b></div>
+    `;
     return;
   }
+
+  contextBox.innerHTML = `
+    <div class="store-box">
+      <b>جهة الطلب:</b> ${storeInfo.label}
+      ${storeInfo.hasMixedSources ? `<div class="warn-box">تنبيه: السلة تجمع عناصر من مصادر أو متاجر متعددة؛ يُفضّل إرسال كل طلب من متجر واحد لتسهيل التجهيز والتوصيل.</div>` : ""}
+    </div>
+  `;
 
   const rows = cartItems.map(item => `
     <div class="cart-line">
       <div>
         <b>${item.name}</b>
-        <div class="muted">${money(item.price)} × ${item.qty}</div>
+        <div class="muted">${money(item.price)} × ${item.qty} (${item.unit || 'للقطعة'})</div>
       </div>
       <div class="qty">
         <button onclick="changeItemQty('${item.key}', -1)">−</button>
-        ${item.qty}
+        <b>${item.qty}</b>
         <button onclick="changeItemQty('${item.key}', 1)">+</button>
       </div>
     </div>
@@ -218,7 +267,13 @@ function updateCart(){
 
   document.getElementById("cartItems").innerHTML = rows;
   const total = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
-  document.getElementById("total").textContent = "إجمالي الطلب: " + money(total);
+
+  summaryBox.innerHTML = `
+    <div class="summary-row"><span>عدد القطع</span><b>${count}</b></div>
+    <div class="summary-row"><span>مجموع المنتجات</span><b>${money(total)}</b></div>
+    <div class="summary-row"><span>التوصيل</span><span class="muted">يُحدّد حسب المنطقة</span></div>
+    <div class="summary-row" style="border-top:1px solid var(--line);padding-top:7px;margin-top:7px"><span>الإجمالي المبدئي</span><b style="color:var(--green2)">${money(total)}</b></div>
+  `;
 }
 
 function openCart(){document.getElementById("overlay").classList.add("show");updateCart()}
