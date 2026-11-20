@@ -500,3 +500,717 @@ function renderCourierOrdersList(orders) {
   const assignedOrders = (orders || []).filter(o => {
     const c = getOrderCourier(o);
     return String(c.name || "").trim().toLowerCase() === courierName.toLowerCase();
+  });
+
+  if (infoBox) {
+    infoBox.innerHTML = `<b>المندوب النشط:</b> ${courierName} — <b>عدد الطلبات المسندة:</b> ${assignedOrders.length}`;
+  }
+
+  if (!assignedOrders.length) {
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسندة حالياً باسم هذا المندوب.</p>";
+    return;
+  }
+
+  listDiv.innerHTML = assignedOrders.map(o => {
+    const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+    const storeLabel = o.store_id
+      ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
+      : "طلب عام";
+    const isOnTheWay = o.status === "on_the_way" || o.status === "out_for_delivery" || o.status === "picked_up";
+    const isDelivered = o.status === "delivered";
+    const isCancelled = o.status === "cancelled" || o.status === "canceled";
+    const mapsQuery = encodeURIComponent(`${o.delivery_area || ""} ${o.delivery_address || ""}`.trim());
+    const mapsUrl = mapsQuery ? `https://www.google.com/maps/search/?api=1&query=${mapsQuery}` : "";
+
+    return `<div class="order">
+      <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+      <b>المتجر / الجهة:</b> ${storeLabel}<br>
+      <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+      <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+      <b>المنتجات:</b> ${itemsList}<br>
+      <b>المبلغ المطلوب:</b> ${money(o.total)}
+      ${o.notes ? `<div style="margin-top:6px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
+      <div class="quick-links">
+        ${o.customer_phone ? `<a class="quick-link" href="tel:${o.customer_phone}" style="background:#e0f2fe;color:#0369a1">📞 اتصال بالعميل</a>` : ''}
+        ${mapsUrl ? `<a class="quick-link" href="${mapsUrl}" target="_blank" rel="noopener noreferrer" style="background:#dcfce7;color:#15803d">🗺️ فتح الخرائط</a>` : ''}
+      </div>
+      <div class="courier-actions">
+        <button class="courier-btn" style="background:#7c3aed" onclick="updateOrderStatus('${o.id}', 'on_the_way')" ${isOnTheWay || isDelivered || isCancelled ? 'disabled' : ''}>🚚 جاري التوصيل</button>
+        <button class="courier-btn" style="background:#16a34a" onclick="updateOrderStatus('${o.id}', 'delivered')" ${isDelivered || isCancelled ? 'disabled' : ''}>✅ تم التوصيل</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+let cartItems = loadCart();
+const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
+
+function getCommissionRate(inputId) {
+  const el = document.getElementById(inputId);
+  const val = el ? Number(el.value) : 10;
+  if (Number.isNaN(val) || val < 0) return 0;
+  if (val > 100) return 100;
+  return val;
+}
+
+function calculateOrderCommission(order, ratePercent) {
+  const isCanceled = order.status === "cancelled" || order.status === "canceled";
+  const baseAmount = Number(order.total || 0);
+  if (isCanceled || baseAmount <= 0) {
+    return { commission: 0, netStore: 0, isCanceled };
+  }
+  const commission = Number(((baseAmount * ratePercent) / 100).toFixed(2));
+  const netStore = Number(Math.max(0, baseAmount - commission).toFixed(2));
+  return { commission, netStore, isCanceled };
+}
+
+function buildSettlementSummaryHtml(orders, ratePercent) {
+  const activeOrders = (orders || []).filter(o => o.status !== "cancelled" && o.status !== "canceled");
+  const grossSales = activeOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const totalCommission = activeOrders.reduce((sum, o) => sum + calculateOrderCommission(o, ratePercent).commission, 0);
+  const totalNetStore = Math.max(0, grossSales - totalCommission);
+
+  return `
+    <div class="settlement-grid">
+      <div class="settle-card">
+        <span>إجمالي الطلبات الفعّالة (${activeOrders.length})</span>
+        <b>${money(grossSales)}</b>
+      </div>
+      <div class="settle-card">
+        <span>عمولة وصّال (${ratePercent}%)</span>
+        <b>${money(totalCommission)}</b>
+      </div>
+      <div class="settle-card">
+        <span>صافي مستحقات المتجر</span>
+        <b>${money(totalNetStore)}</b>
+      </div>
+    </div>
+  `;
+}
+
+function recalculateVisiblePanels() {
+  if (document.getElementById("storePanel").classList.contains("show")) {
+    renderStoreOrdersList(lastStoreOrders);
+  }
+  if (document.getElementById("admin").classList.contains("show")) {
+    renderAdminOrdersList(lastAdminOrders);
+  }
+}
+
+function getCartStoreInfo() {
+  if (!cartItems.length) {
+    return { label: "لا توجد عناصر بعد", hasMixedSources: false, storeId: null };
+  }
+  const storeIds = cartItems.map(item => item.store_id || null);
+  const uniqueNonNull = [...new Set(storeIds.filter(Boolean))];
+  const hasNull = storeIds.some(id => !id);
+
+  if (uniqueNonNull.length === 1 && !hasNull) {
+    const sid = uniqueNonNull[0];
+    return {
+      label: storeNameCache[sid] ? `متجر: ${storeNameCache[sid]}` : `متجر محدد (معرّف: ${sid})`,
+      hasMixedSources: false,
+      storeId: sid
+    };
+  }
+  if (uniqueNonNull.length === 0 && hasNull) {
+    return { label: "منتجات مقترحة (طلب عام)", hasMixedSources: false, storeId: null };
+  }
+  return {
+    label: "عناصر من أكثر من مصدر أو متجر",
+    hasMixedSources: true,
+    storeId: uniqueNonNull[0] || null
+  };
+}
+
+async function resolveStoreNamesForCart() {
+  const idsToFetch = [...new Set(
+    cartItems.map(i => i.store_id).filter(id => id && !storeNameCache[id])
+  )];
+  if (!idsToFetch.length) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('stores')
+      .select('id, name')
+      .in('id', idsToFetch);
+    if (!error && Array.isArray(data)) {
+      data.forEach(s => { storeNameCache[s.id] = s.name; });
+      updateCart();
+    }
+  } catch (_) {}
+}
+
+async function fetchStores() {
+  try {
+    const { data: stores, error } = await supabaseClient
+      .from('stores')
+      .select('*');
+
+    if (error) throw error;
+
+    const container = document.getElementById('storesContainer');
+    if (!container) return;
+
+    if (!stores || stores.length === 0) {
+      container.innerHTML = '<p class="muted">لا توجد متاجر مضافة حالياً.</p>';
+      return;
+    }
+
+    allStoresList = stores;
+    stores.forEach(s => { if (s && s.id) storeNameCache[s.id] = s.name; });
+
+    container.innerHTML = stores.map(store => `
+      <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
+        <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
+          ${!store.image_url ? '🏪' : ''}
+        </div>
+        <h3>${store.name}</h3>
+        <small>التصنيف: ${store.category || 'عام'}</small>
+        <div class="price-row">
+          <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
+            ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
+          </span>
+        </div>
+      </article>
+    `).join("");
+
+    updateCart();
+  } catch (err) {
+    console.error('خطأ في جلب المتاجر:', err);
+    document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
+  }
+}
+
+function renderProducts(){
+  document.getElementById("products").innerHTML = catalog.map(p=>`
+    <article class="product">
+      <div class="pic">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <small>${p.unit}</small>
+      <div class="price-row">
+        <span class="price">${money(p.price)}</span>
+        <button class="add" onclick="addCatalogItem(${p.id})">+ أضف</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+function addCatalogItem(id){
+  const p = catalog.find(x => x.id === id);
+  if (!p) return;
+  const key = `cat_${p.id}`;
+  const existing = cartItems.find(x => x.key === key);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cartItems.push({
+      key,
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      unit: p.unit,
+      qty: 1,
+      store_id: null
+    });
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function changeItemQty(key, delta){
+  const idx = cartItems.findIndex(x => x.key === key);
+  if (idx === -1) return;
+  cartItems[idx].qty += delta;
+  if (cartItems[idx].qty <= 0) {
+    cartItems.splice(idx, 1);
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function totalCount(){
+  return cartItems.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+}
+
+function updateCart(){
+  const count = totalCount();
+  document.getElementById("topCount").textContent = count;
+  document.getElementById("fabCount").textContent = count;
+
+  const storeInfo = getCartStoreInfo();
+  const contextBox = document.getElementById("storeContextBox");
+  const summaryBox = document.getElementById("cartSummary");
+
+  if (!cartItems.length) {
+    contextBox.innerHTML = "";
+    document.getElementById("cartItems").innerHTML = '<p class="muted">السلة فارغة. أضف بعض المنتجات أولاً.</p>';
+    summaryBox.innerHTML = `
+      <div class="summary-row"><span>عدد القطع</span><b>0</b></div>
+      <div class="summary-row"><span>إجمالي المنتجات</span><b>${money(0)}</b></div>
+    `;
+    return;
+  }
+
+  contextBox.innerHTML = `
+    <div class="store-box">
+      <b>جهة الطلب:</b> ${storeInfo.label}
+      ${storeInfo.hasMixedSources ? `<div class="warn-box">تنبيه: السلة تجمع عناصر من أكثر من مصدر/متجر؛ يُفضّل إرسال كل طلب من متجر واحد لتسهيل التجهيز والتوصيل.</div>` : ""}
+    </div>
+  `;
+
+  const rows = cartItems.map(item => `
+    <div class="cart-line">
+      <div>
+        <b>${item.name}</b>
+        <div class="muted">${money(item.price)} × ${item.qty} (${item.unit || 'للقطعة'})</div>
+      </div>
+      <div class="qty">
+        <button onclick="changeItemQty('${item.key}', -1)">−</button>
+        <b>${item.qty}</b>
+        <button onclick="changeItemQty('${item.key}', 1)">+</button>
+      </div>
+    </div>
+  `).join("");
+
+  document.getElementById("cartItems").innerHTML = rows;
+  const total = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+
+  summaryBox.innerHTML = `
+    <div class="summary-row"><span>عدد القطع</span><b>${count}</b></div>
+    <div class="summary-row"><span>مجموع المنتجات</span><b>${money(total)}</b></div>
+    <div class="summary-row"><span>التوصيل</span><span class="muted">يُحدّد حسب المنطقة</span></div>
+    <div class="summary-row" style="border-top:1px solid var(--line);padding-top:7px;margin-top:7px"><span>الإجمالي المبدئي</span><b style="color:var(--green2)">${money(total)}</b></div>
+  `;
+}
+
+function openCart(){
+  document.getElementById("overlay").classList.add("show");
+  const mainArea = document.getElementById("area");
+  const checkoutArea = document.getElementById("checkoutArea");
+  if (mainArea && checkoutArea && mainArea.value) {
+    const matched = [...checkoutArea.options].some(opt => opt.value === mainArea.value);
+    if (matched) checkoutArea.value = mainArea.value;
+  }
+  resolveStoreNamesForCart();
+  updateCart();
+}
+function closeCart(){document.getElementById("overlay").classList.remove("show")}
+
+async function placeOrder(){
+ if(!totalCount()){alert("أضف منتجاً واحداً على الأقل إلى السلة.");return}
+ const name = document.getElementById("customerName").value.trim();
+ const phone = document.getElementById("customerPhone").value.trim();
+ const address = document.getElementById("customerAddress").value.trim();
+ if(!name || !phone || !address){alert("من فضلك أكمل الاسم ورقم الهاتف والعنوان.");return}
+
+ const submitBtn = document.getElementById("btnSubmit");
+ submitBtn.disabled = true;
+ submitBtn.textContent = "جاري إرسال الطلب...";
+
+ const orderNum = "WD-" + Date.now().toString().slice(-6);
+ const totalAmount = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+ const firstStoreId = cartItems.find(item => item.store_id)?.store_id || null;
+
+ try {
+   const orderPayload = {
+     order_number: orderNum,
+     customer_name: name,
+     customer_phone: phone,
+     delivery_area: document.getElementById("checkoutArea").value,
+     delivery_address: address,
+     notes: document.getElementById("notes").value || '',
+     subtotal: totalAmount,
+     delivery_fee: 0,
+     total: totalAmount,
+     status: 'new'
+   };
+   if (firstStoreId) orderPayload.store_id = firstStoreId;
+
+   const { data: orderData, error: orderErr } = await supabaseClient
+     .from('orders')
+     .insert([orderPayload])
+     .select();
+
+   if (orderErr) throw orderErr;
+   const createdOrder = orderData[0];
+
+   const orderItemsData = cartItems.map(item => ({
+     order_id: createdOrder.id,
+     item_name: item.name,
+     quantity: item.qty,
+     unit_price: item.price,
+     total_price: item.qty * item.price
+   }));
+
+   const { error: itemsErr } = await supabaseClient.from('order_items').insert(orderItemsData);
+   if (itemsErr) throw itemsErr;
+
+   alert("✅ تم إرسال طلبك بنجاح! رقم الطلب: " + orderNum);
+   cartItems = [];
+   saveCart(cartItems);
+   updateCart();
+   closeCart();
+   document.getElementById("customerName").value = "";
+   document.getElementById("customerPhone").value = "";
+   document.getElementById("customerAddress").value = "";
+   document.getElementById("notes").value = "";
+   if (document.getElementById("admin").classList.contains("show")) {
+     fetchOrdersFromSupabase();
+   }
+   if (document.getElementById("storePanel").classList.contains("show")) {
+     fetchStoreOwnerOrders();
+   }
+   if (document.getElementById("courierPanel").classList.contains("show")) {
+     fetchCourierOrders(true);
+   }
+ } catch(err) {
+   console.error("Supabase Error:", err);
+   alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + err.message);
+ } finally {
+   submitBtn.disabled = false;
+   submitBtn.textContent = "تأكيد وإرسال الطلب";
+ }
+}
+
+function getStatusLabel(status) {
+  const map = {
+    new: '<span class="badge new">جديد</span>',
+    pending: '<span class="badge new">قيد المراجعة</span>',
+    confirmed: '<span class="badge accepted">مؤكد</span>',
+    accepted: '<span class="badge accepted">مقبول</span>',
+    preparing: '<span class="badge preparing">قيد التجهيز</span>',
+    ready_for_pickup: '<span class="badge accepted">جاهز للاستلام</span>',
+    assigned: '<span class="badge accepted">تم إسناد مندوب</span>',
+    picked_up: '<span class="badge on_the_way">تم الاستلام من المتجر</span>',
+    on_the_way: '<span class="badge on_the_way">جاري التوصيل</span>',
+    out_for_delivery: '<span class="badge on_the_way">جاري التوصيل</span>',
+    delivered: '<span class="badge delivered">تم التوصيل</span>',
+    cancelled: '<span class="badge" style="background:#f44336;color:white">ملغي</span>',
+    canceled: '<span class="badge" style="background:#f44336;color:white">ملغي</span>'
+  };
+  return map[status] || `<span class="badge">${status}</span>`;
+}
+
+function setRealtimeBadge(stateText, isLive = false, targetId = "realtimeStatus") {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  el.textContent = stateText;
+  el.classList.toggle("live", Boolean(isLive));
+}
+
+function showStoreOwnerPanel() {
+  const panel = document.getElementById("storePanel");
+  panel.classList.add("show");
+  updateSoundButtons();
+  const select = document.getElementById("storeOwnerSelect");
+  if (allStoresList.length) {
+    select.innerHTML = allStoresList.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+    fetchStoreOwnerOrders();
+  } else {
+    supabaseClient.from('stores').select('*').then(({ data }) => {
+      if (data && data.length) {
+        allStoresList = data;
+        select.innerHTML = data.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+        fetchStoreOwnerOrders();
+      } else {
+        select.innerHTML = '<option value="">لا توجد متاجر مضافة</option>';
+      }
+    });
+  }
+  subscribeStoreRealtime();
+}
+
+function closeStorePanel() {
+  document.getElementById("storePanel").classList.remove("show");
+  if (storeRealtimeChannel) {
+    supabaseClient.removeChannel(storeRealtimeChannel);
+    storeRealtimeChannel = null;
+  }
+}
+
+function subscribeStoreRealtime() {
+  if (storeRealtimeChannel) return;
+  setRealtimeBadge("⏳ بث المتجر جارٍ...", false, "storeRealtimeStatus");
+
+  storeRealtimeChannel = supabaseClient
+    .channel("wassal-store-orders-realtime")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "orders" },
+      (payload) => {
+        if (!document.getElementById("storePanel").classList.contains("show")) return;
+        triggerInstantNotification(payload, "store");
+        fetchStoreOwnerOrders(true);
+      }
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        setRealtimeBadge("🟢 مباشر للمتجر", true, "storeRealtimeStatus");
+      } else {
+        setRealtimeBadge("⚠️ تعذر البث اللحظي للمتجر", false, "storeRealtimeStatus");
+      }
+    });
+}
+
+function renderStoreOrdersList(orders) {
+  const summaryEl = document.getElementById("storeSettlementSummary");
+  const listDiv = document.getElementById("storeOrdersList");
+  const rate = getCommissionRate("storeCommissionRate");
+
+  if (!orders || orders.length === 0) {
+    if (summaryEl) summaryEl.innerHTML = "";
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة لهذا المتجر حتى الآن.</p>";
+    return;
+  }
+
+  if (summaryEl) {
+    summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
+  }
+
+  listDiv.innerHTML = orders.map(o => {
+    const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+    const calc = calculateOrderCommission(o, rate);
+    const commText = calc.isCanceled
+      ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
+      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+
+    return `<div class="order">
+      <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+      <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+      <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+      <b>المنتجات المطلوب تحضيرها:</b> ${itemsList}<br>
+      <b>إجمالي المبلغ:</b> ${money(o.total)}
+      <div class="comm-line">${commText}</div>
+      ${o.notes ? `<div style="margin-top:4px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
+      <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+        <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">مقبول / قيد التجهيز</button>
+        <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاهز / جاري التوصيل</button>
+        <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء الطلب</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function fetchStoreOwnerOrders(silent = false) {
+  const select = document.getElementById("storeOwnerSelect");
+  const selectedStoreId = select.value;
+  const listDiv = document.getElementById("storeOrdersList");
+  const summaryEl = document.getElementById("storeSettlementSummary");
+  if (!selectedStoreId) {
+    if (summaryEl) summaryEl.innerHTML = "";
+    listDiv.innerHTML = "<p class='muted'>يرجى اختيار متجر أولاً.</p>";
+    return;
+  }
+  if (!silent) listDiv.innerHTML = "<p class='muted'>جاري تحميل طلبات المتجر...</p>";
+
+  try {
+    const { data: orders, error } = await supabaseClient
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('store_id', selectedStoreId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    lastStoreOrders = orders || [];
+    renderStoreOrdersList(lastStoreOrders);
+  } catch (err) {
+    listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
+  }
+}
+
+function subscribeOrdersRealtime() {
+  if (ordersRealtimeChannel) return;
+  setRealtimeBadge("⏳ جاري الاتصال بالتحديث اللحظي...", false);
+
+  ordersRealtimeChannel = supabaseClient
+    .channel("wassal-orders-realtime")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "orders" },
+      (payload) => {
+        if (!document.getElementById("admin").classList.contains("show")) return;
+        triggerInstantNotification(payload, "admin");
+        clearTimeout(realtimeRefreshTimer);
+        realtimeRefreshTimer = setTimeout(() => {
+          fetchOrdersFromSupabase(true);
+        }, 250);
+      }
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        setRealtimeBadge("🟢 مباشر (Realtime نشط)", true);
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        setRealtimeBadge("⚠️ تعذر البث اللحظي — استخدم تحديث الآن", false);
+      }
+    });
+}
+
+function unsubscribeOrdersRealtime() {
+  clearTimeout(realtimeRefreshTimer);
+  if (ordersRealtimeChannel) {
+    supabaseClient.removeChannel(ordersRealtimeChannel);
+    ordersRealtimeChannel = null;
+  }
+  setRealtimeBadge("⏸ التحديث اللحظي متوقف", false);
+}
+
+function closeAdmin() {
+  document.getElementById("admin").classList.remove("show");
+  unsubscribeOrdersRealtime();
+}
+
+async function showAdmin(){
+ const pin = prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
+ if(pin !== "1234") return;
+ document.getElementById("admin").classList.add("show");
+ updateSoundButtons();
+ subscribeOrdersRealtime();
+ fetchOrdersFromSupabase();
+}
+
+async function ensureStoreNamesLoaded(orders) {
+  const missingIds = [...new Set(
+    (orders || [])
+      .map(o => o.store_id)
+      .filter(id => id && !storeNameCache[id])
+  )];
+  if (!missingIds.length) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('stores')
+      .select('id, name')
+      .in('id', missingIds);
+    if (!error && Array.isArray(data)) {
+      data.forEach(s => { storeNameCache[s.id] = s.name; });
+    }
+  } catch (_) {}
+}
+
+function renderAdminOrdersList(orders) {
+  const summaryEl = document.getElementById("adminSettlementSummary");
+  const listDiv = document.getElementById("ordersList");
+  const rate = getCommissionRate("adminCommissionRate");
+  const filterSelect = document.getElementById("deliveryFilter");
+  const selectedFilter = filterSelect ? filterSelect.value : "all";
+
+  if (!orders || orders.length === 0) {
+    if (summaryEl) summaryEl.innerHTML = "";
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة بعد.</p>";
+    return;
+  }
+
+  if (summaryEl) {
+    summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
+  }
+
+  const filteredOrders = orders.filter(o => {
+    if (selectedFilter === "all") return true;
+    if (selectedFilter === "cancelled") return o.status === "cancelled" || o.status === "canceled";
+    return o.status === selectedFilter;
+  });
+
+  if (!filteredOrders.length) {
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مطابقة لحالة التوصيل المحددة.</p>";
+    return;
+  }
+
+  listDiv.innerHTML = filteredOrders.map(o => {
+    const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+    const storeLabel = o.store_id
+      ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
+      : "طلب عام";
+    const calc = calculateOrderCommission(o, rate);
+    const commText = calc.isCanceled
+      ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
+      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+    const courier = getOrderCourier(o);
+    const courierSummary = courier.name
+      ? `المندوب: <b>${courier.name}</b>${courier.phone ? ` (${courier.phone})` : ""}`
+      : `لم يُسند مندوب بعد`;
+
+    return `<div class="order">
+      <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+      <b>الجهة / المتجر:</b> ${storeLabel}<br>
+      <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+      <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+      <b>المنتجات:</b> ${itemsList}<br>
+      <b>الإجمالي:</b> ${money(o.total)}
+      <div class="comm-line">${commText}</div>
+      <div class="dispatch-box">
+        <span>${courierSummary}</span>
+        <input id="courierName_${o.id}" value="${courier.name.replace(/"/g, '"')}" placeholder="اسم المندوب">
+        <input id="courierPhone_${o.id}" value="${courier.phone.replace(/"/g, '"')}" placeholder="هاتف المندوب">
+        <button onclick="assignCourier('${o.id}')" style="background:var(--green);color:#fff;padding:5px 10px;border-radius:7px;font-weight:700">حفظ المندوب</button>
+      </div>
+      ${o.notes ? `<div style="margin-top:6px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
+      <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+        <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">قيد التجهيز</button>
+        <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاري التوصيل</button>
+        <button onclick="updateOrderStatus('${o.id}', 'delivered')" style="background:#4CAF50;color:white;padding:5px 9px;border-radius:6px">تم التوصيل</button>
+        <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function fetchOrdersFromSupabase(silent = false){
+ const listDiv = document.getElementById("ordersList");
+ const summaryEl = document.getElementById("adminSettlementSummary");
+ if (!silent) {
+   if (summaryEl) summaryEl.innerHTML = "";
+   listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات...</p>";
+ }
+ try {
+   const { data: orders, error } = await supabaseClient
+     .from('orders')
+     .select('*, order_items(*)')
+     .order('created_at', { ascending: false });
+
+   if (error) throw error;
+
+   await ensureStoreNamesLoaded(orders);
+
+   const syncEl = document.getElementById("lastSyncText");
+   if (syncEl) {
+     syncEl.textContent = "آخر مزامنة: " + new Date().toLocaleTimeString("ar-EG");
+   }
+
+   lastAdminOrders = orders || [];
+   populateCourierSuggestions(lastAdminOrders);
+   renderAdminOrdersList(lastAdminOrders);
+ } catch(err) {
+   listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
+ }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) throw error;
+    alert("تم التحديث بنجاح! ✅");
+    if (document.getElementById("admin").classList.contains("show")) {
+      fetchOrdersFromSupabase(true);
+    }
+    if (document.getElementById("storePanel").classList.contains("show")) {
+      fetchStoreOwnerOrders(true);
+    }
+    if (document.getElementById("courierPanel").classList.contains("show")) {
+      fetchCourierOrders(true);
+    }
+  } catch (err) {
+    alert("خطأ: " + err.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  fetchStores();
+  renderProducts();
+  updateCart();
+  updateSoundButtons();
+});
+
+document.querySelector(".brand").style.cursor = "pointer";
+document.querySelector(".brand").addEventListener("dblclick", showAdmin);
+</script>
+</body>
+</html>
