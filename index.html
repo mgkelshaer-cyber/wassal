@@ -27,6 +27,10 @@
 .cart-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}.qty{display:flex;align-items:center;gap:6px}.qty button{background:#edf3ef;border-radius:8px;padding:5px 10px}
 .store-box{background:#f4f8f6;border:1px solid #d7e5df;border-radius:12px;padding:10px 12px;margin:12px 0;font-size:12px;line-height:1.7}
 .warn-box{background:#fff8eb;border:1px solid #f4cf8a;color:#7a4f01;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11px}
+.promo-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
+.promo-row{display:flex;gap:8px;margin-top:6px}
+.promo-row input{flex:1;border:1px solid #dce4de;border-radius:9px;padding:8px 10px;background:#fff;outline-color:var(--green2);text-transform:uppercase}
+.promo-msg{font-size:11px;margin-top:6px;line-height:1.5}
 .summary-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
 .summary-row{display:flex;justify-content:space-between;margin:5px 0}
 .settlement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
@@ -110,7 +114,7 @@
 
  <section class="panel courier-panel" id="courierPanel">
   <div class="drawer-head">
-    <h3>لوحة المندوب (متابعة التوصيل: جاري التوصيل ← تم التوصيل)</h3>
+    <h3>لوحة المندوب (متابعة التوصيل: جاري التوصيل ← تم التوصيل)[cite: 2]</h3>
     <button class="close" onclick="closeCourierPanel()">×</button>
   </div>
   <div class="admin-bar">
@@ -198,6 +202,15 @@
  <div class="drawer-head"><h2 style="margin:0">سلة مشترياتك</h2><button class="close" onclick="closeCart()">×</button></div>
  <div id="storeContextBox"></div>
  <div id="cartItems"></div>
+ <div class="promo-box">
+  <label for="promoCodeInput" style="font-size:12px;font-weight:700">🎟️ كود الخصم (متاح: WASSAL10 أو WELCOME20)</label>
+  <div class="promo-row">
+   <input id="promoCodeInput" placeholder="أدخل كود الخصم" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode()}">
+   <button type="button" onclick="applyPromoCode()" style="background:var(--green2);color:#fff;padding:8px 12px;border-radius:9px;font-weight:700">تطبيق</button>
+   <button type="button" onclick="clearPromoCode()" style="background:#edf1ed;color:var(--ink);padding:8px 10px;border-radius:9px;font-weight:700">إزالة</button>
+  </div>
+  <div class="promo-msg muted" id="promoMessage"></div>
+ </div>
  <div class="summary-box" id="cartSummary"></div>
  <div class="field"><label>منطقة التوصيل</label><select id="checkoutArea"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى</option></select></div>
  <div class="field"><label>الاسم</label><input id="customerName" placeholder="الاسم بالكامل"></div>
@@ -217,6 +230,11 @@ const CART_STORAGE_KEY = "wassal_cart_v1";
 const DISPATCH_STORAGE_KEY = "wassal_dispatch_v1";
 const COURIER_ACTIVE_KEY = "wassal_active_courier_v1";
 const TRACK_ORDER_KEY = "wassal_last_track_order_v1";
+const PROMO_STORAGE_KEY = "wassal_promo_code_v1";
+const PROMO_CODES = {
+  WASSAL10: { type: "percent", value: 10, label: "خصم 10% على المنتجات" },
+  WELCOME20: { type: "fixed", value: 20, label: "خصم 20 ج.م على الطلب" }
+};
 const storeNameCache = {};
 let allStoresList = [];
 let lastStoreOrders = [];
@@ -349,6 +367,74 @@ function saveCart(items) {
   try {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   } catch (_) {}
+}
+
+function loadSavedPromoCode() {
+  try {
+    const raw = String(localStorage.getItem(PROMO_STORAGE_KEY) || "").trim().toUpperCase();
+    return PROMO_CODES[raw] ? raw : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function savePromoCode(code) {
+  try {
+    if (code) localStorage.setItem(PROMO_STORAGE_KEY, code);
+    else localStorage.removeItem(PROMO_STORAGE_KEY);
+  } catch (_) {}
+}
+
+let activePromoCode = loadSavedPromoCode();
+
+function calculateCartTotals() {
+  const subtotal = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+  const promo = activePromoCode ? PROMO_CODES[activePromoCode] : null;
+  let discount = 0;
+
+  if (subtotal > 0 && promo) {
+    if (promo.type === "percent") {
+      discount = Number(((subtotal * promo.value) / 100).toFixed(2));
+    } else if (promo.type === "fixed") {
+      discount = Math.min(subtotal, Number(promo.value));
+    }
+  }
+
+  const finalTotal = Number(Math.max(0, subtotal - discount).toFixed(2));
+  return { subtotal, discount, finalTotal, promo };
+}
+
+function setPromoMessage(text, isError = false) {
+  const el = document.getElementById("promoMessage");
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? "#c5221f" : "#137333";
+}
+
+function applyPromoCode() {
+  const input = document.getElementById("promoCodeInput");
+  const code = String(input ? input.value : "").trim().toUpperCase();
+  if (!code) {
+    setPromoMessage("أدخل كود خصم أولاً مثل WASSAL10 أو WELCOME20.", true);
+    return;
+  }
+  if (!PROMO_CODES[code]) {
+    setPromoMessage("كود الخصم غير صالح. جرّب WASSAL10 أو WELCOME20.", true);
+    return;
+  }
+  activePromoCode = code;
+  savePromoCode(code);
+  setPromoMessage(`تم تطبيق الكود ${code} (${PROMO_CODES[code].label}) ✅`, false);
+  updateCart();
+}
+
+function clearPromoCode() {
+  activePromoCode = "";
+  savePromoCode("");
+  const input = document.getElementById("promoCodeInput");
+  if (input) input.value = "";
+  setPromoMessage("تم إزالة كود الخصم.", false);
+  updateCart();
 }
 
 function loadDispatchMap() {
@@ -868,6 +954,11 @@ function updateCart(){
   document.getElementById("topCount").textContent = count;
   document.getElementById("fabCount").textContent = count;
 
+  const promoInput = document.getElementById("promoCodeInput");
+  if (promoInput && activePromoCode && !promoInput.value) {
+    promoInput.value = activePromoCode;
+  }
+
   const storeInfo = getCartStoreInfo();
   const contextBox = document.getElementById("storeContextBox");
   const summaryBox = document.getElementById("cartSummary");
@@ -878,6 +969,7 @@ function updateCart(){
     summaryBox.innerHTML = `
       <div class="summary-row"><span>عدد القطع</span><b>0</b></div>
       <div class="summary-row"><span>إجمالي المنتجات</span><b>${money(0)}</b></div>
+      <div class="summary-row"><span>الإجمالي النهائي المتوقع</span><b style="color:var(--green2)">${money(0)}</b></div>
     `;
     return;
   }
@@ -904,13 +996,20 @@ function updateCart(){
   `).join("");
 
   document.getElementById("cartItems").innerHTML = rows;
-  const total = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+  const { subtotal, discount, finalTotal, promo } = calculateCartTotals();
+
+  if (promo && discount > 0) {
+    setPromoMessage(`الكود ${activePromoCode} مفعّل (${promo.label})`, false);
+  } else if (!activePromoCode) {
+    setPromoMessage("", false);
+  }
 
   summaryBox.innerHTML = `
     <div class="summary-row"><span>عدد القطع</span><b>${count}</b></div>
-    <div class="summary-row"><span>مجموع المنتجات</span><b>${money(total)}</b></div>
+    <div class="summary-row"><span>مجموع المنتجات</span><b>${money(subtotal)}</b></div>
+    ${discount > 0 ? `<div class="summary-row"><span>خصم الكود (${activePromoCode})</span><b style="color:#137333">− ${money(discount)}</b></div>` : ""}
     <div class="summary-row"><span>التوصيل</span><span class="muted">يُحدّد حسب المنطقة</span></div>
-    <div class="summary-row" style="border-top:1px solid var(--line);padding-top:7px;margin-top:7px"><span>الإجمالي المبدئي</span><b style="color:var(--green2)">${money(total)}</b></div>
+    <div class="summary-row" style="border-top:1px solid var(--line);padding-top:7px;margin-top:7px"><span>الإجمالي النهائي المتوقع</span><b style="color:var(--green2)">${money(finalTotal)}</b></div>
   `;
 }
 
@@ -939,8 +1038,13 @@ async function placeOrder(){
  submitBtn.textContent = "جاري إرسال الطلب...";
 
  const orderNum = "WD-" + Date.now().toString().slice(-6);
- const totalAmount = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+ const { subtotal, discount, finalTotal } = calculateCartTotals();
  const firstStoreId = cartItems.find(item => item.store_id)?.store_id || null;
+ const rawNotes = document.getElementById("notes").value.trim();
+ const promoNote = discount > 0
+   ? `كود خصم: ${activePromoCode} (خصم ${discount} ج.م من أصل ${subtotal} ج.م)`
+   : "";
+ const mergedNotes = [promoNote, rawNotes].filter(Boolean).join(" | ");
 
  try {
    const orderPayload = {
@@ -949,10 +1053,10 @@ async function placeOrder(){
      customer_phone: phone,
      delivery_area: document.getElementById("checkoutArea").value,
      delivery_address: address,
-     notes: document.getElementById("notes").value || '',
-     subtotal: totalAmount,
+     notes: mergedNotes,
+     subtotal: subtotal,
      delivery_fee: 0,
-     total: totalAmount,
+     total: finalTotal,
      status: 'new'
    };
    if (firstStoreId) orderPayload.store_id = firstStoreId;
