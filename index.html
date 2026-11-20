@@ -46,6 +46,14 @@
 
 .products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:212px;transition:transform .18s ease,box-shadow .18s ease}.product:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(18,60,58,0.08)}.pic{height:88px;border-radius:14px;background:#f2f6f4;display:grid;place-items:center;font-size:43px;margin-bottom:12px;overflow:hidden}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted);line-height:1.5}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px;gap:8px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700;transition:background .18s ease}.add:hover{background:var(--green2)}
 
+.sub-shelf{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line)}
+.sub-shelf-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.sub-shelf-head h3{margin:0;font-size:16px;color:var(--green)}
+.sub-shelf-head span{font-size:12px;color:var(--muted)}
+
+.status-control-box{background:#f4f8f6;border:1px solid #d7e5df;border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font-size:12px}
+.status-toggle-btn{padding:7px 12px;border-radius:9px;font-weight:800;font-size:12px;color:#fff}
+
 .panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:22px;box-shadow:0 4px 14px rgba(18,60,58,0.04)}.panel h3{margin:0 0 12px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.step{background:#f6f8f5;border-radius:13px;padding:14px}.step b{display:block;margin-bottom:5px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
 .footer{background:#102f2d;color:#d8e5e1;text-align:center;padding:22px;font-size:12px}
 
@@ -174,6 +182,13 @@
         <div><h2>🏪 المتاجر</h2><p>المتاجر والسوبرماركت والمخابز والصيدليات المتاحة (قابل للإضافة مستقبلاً)</p></div>
       </div>
       <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
+      <div class="sub-shelf">
+        <div class="sub-shelf-head">
+          <h3>💊 منتجات الصيدلية الجاهزة للطلب السريع</h3>
+          <span>متاحة لإضافتها مباشرة للسلة حتى لو لم تُضاف منتجات داخل صفحة الصيدلية</span>
+        </div>
+        <section class="products" id="pharmacyQuickProducts"></section>
+      </div>
     </div>
 
     <div class="tab-content-section" id="secRestaurants">
@@ -246,7 +261,7 @@
   <div class="admin-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <label><b>اختر المتجر:</b></label>
-      <select id="storeOwnerSelect" onchange="fetchStoreOwnerOrders()" style="padding:6px;border-radius:8px;border:1px solid #ccc"></select>
+      <select id="storeOwnerSelect" onchange="onStoreOwnerSelectionChange()" style="padding:6px;border-radius:8px;border:1px solid #ccc"></select>
       <label><b>نسبة العمولة %:</b></label>
       <input id="storeCommissionRate" type="number" min="0" max="100" step="0.5" value="10" onchange="recalculateVisiblePanels()" style="width:72px;padding:6px;border-radius:8px;border:1px solid #ccc">
     </div>
@@ -257,6 +272,7 @@
       <button onclick="fetchStoreOwnerOrders()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث</button>
     </div>
   </div>
+  <div id="storeOwnerStatusBar"></div>
   <div class="alert-banner" id="storeAlertBanner">
     <span id="storeAlertText"></span>
     <button onclick="hideAlertBanner('storeAlertBanner')" style="background:transparent;color:#5c3c00;font-weight:800">×</button>
@@ -269,6 +285,10 @@
   <div class="drawer-head">
     <h3>لوحة تحكم وصّال (مركز الطلبات والعمولات والتوصيل)</h3>
     <button class="close" onclick="closeAdmin()">×</button>
+  </div>
+  <div class="promo-admin-box">
+    <b>🏪 التحكم السريع في فتح وإغلاق المتاجر والمطاعم</b>
+    <div id="adminStoresStatusList" style="margin-top:8px"></div>
   </div>
   <div class="promo-admin-box">
     <b>🎟️ إدارة أكواد الخصم والجهة المتحملة</b>
@@ -367,6 +387,13 @@ const DEFAULT_PROMO_RULES = {
   WASSAL10: { type: "percent", value: 10, bearer: "platform", active: true },
   WELCOME20: { type: "fixed", value: 20, bearer: "platform", active: true }
 };
+
+const pharmacyCatalog = [
+  { id: "ph1", name: "شاش ومعقم طبي", cat: "صيدليات", price: 35, unit: "للعبوة", emoji: "🩹" },
+  { id: "ph2", name: "فيتامينات ومقويات عامة", cat: "صيدليات", price: 95, unit: "للعبوة", emoji: "💊" },
+  { id: "ph3", name: "حقيبة إسعافات أولية منزلية", cat: "صيدليات", price: 140, unit: "للحقيبة", emoji: "🩺" },
+  { id: "ph4", name: "غسول ومرطب طبي للبشرة", cat: "صيدليات", price: 75, unit: "للعبوة", emoji: "🧴" }
+];
 
 function switchMainTab(tabName) {
   document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -518,8 +545,144 @@ const catalog=[
  {id:9,name:"وجبة فراخ",cat:"مطاعم",price:110,unit:"للوجبة",emoji:"🍗"},
  {id:10,name:"مناديل ورقية",cat:"مستلزمات منزلية",price:25,unit:"للعبوة",emoji:"🧻"},
  {id:11,name:"مسحوق غسيل",cat:"مستلزمات منزلية",price:85,unit:"للعبوة",emoji:"🧼"},
- {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"}
+ {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"},
+ ...pharmacyCatalog
 ];
+
+function isStoreOpenStatus(status) {
+  const s = String(status || "open").trim().toLowerCase();
+  return s === "open" || s === "مفتوح" || s === "active";
+}
+
+function findPharmacyStore() {
+  return (allStoresList || []).find(s => {
+    const combined = `${s.name || ""} ${s.category || ""}`.toLowerCase();
+    return combined.includes("صيدل") || combined.includes("pharmacy");
+  }) || null;
+}
+
+function renderPharmacyQuickProducts() {
+  const box = document.getElementById("pharmacyQuickProducts");
+  if (!box) return;
+  const phStore = findPharmacyStore();
+  const phOpen = phStore ? isStoreOpenStatus(phStore.status) : true;
+  const phStoreId = phStore ? phStore.id : null;
+
+  box.innerHTML = pharmacyCatalog.map(p => `
+    <article class="product">
+      <div class="pic">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <small>${p.unit} — ${phStore ? phStore.name : p.cat}</small>
+      <div class="price-row">
+        <span class="price">${money(p.price)}</span>
+        <button class="add" onclick="addPharmacyItem('${p.id}', '${phStoreId || ""}', ${phOpen})">+ أضف</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+function addPharmacyItem(id, storeId, isOpen = true) {
+  if (!isOpen) {
+    alert("الصيدلية مغلقة حالياً ولا تستقبل طلبات جديدة.");
+    return;
+  }
+  const p = pharmacyCatalog.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const key = `ph_${p.id}`;
+  const existing = cartItems.find(x => x.key === key);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cartItems.push({
+      key,
+      id: p.id,
+      name: p.name,
+      price: Number(p.price),
+      unit: p.unit,
+      qty: 1,
+      store_id: storeId || null
+    });
+  }
+  saveCart(cartItems);
+  updateCart();
+}
+
+function renderStoreOwnerStatusBar() {
+  const container = document.getElementById("storeOwnerStatusBar");
+  const select = document.getElementById("storeOwnerSelect");
+  if (!container || !select) return;
+  const sid = select.value;
+  const store = allStoresList.find(s => String(s.id) === String(sid));
+  if (!store) {
+    container.innerHTML = "";
+    return;
+  }
+  const open = isStoreOpenStatus(store.status);
+  container.innerHTML = `
+    <div class="status-control-box">
+      <div>
+        <b>حالة «${store.name}» الحالية:</b>
+        <span style="font-weight:800;color:${open ? '#137333' : '#c5221f'}">${open ? 'مفتوح 🟢' : 'مغلق 🔴'}</span>
+      </div>
+      <button type="button" class="status-toggle-btn" style="background:${open ? '#c5221f' : '#137333'}" onclick="toggleStoreStatus('${store.id}', '${store.status || "open"}')">
+        ${open ? 'إغلاق المتجر الآن 🔴' : 'فتح المتجر الآن 🟢'}
+      </button>
+    </div>
+  `;
+}
+
+function renderAdminStoresStatusList() {
+  const container = document.getElementById("adminStoresStatusList");
+  if (!container) return;
+  if (!allStoresList.length) {
+    container.innerHTML = "<p class='muted'>لا توجد متاجر أو مطاعم مسجلة حالياً.</p>";
+    return;
+  }
+  container.innerHTML = allStoresList.map(s => {
+    const open = isStoreOpenStatus(s.status);
+    return `
+      <div class="promo-item">
+        <div>
+          <b>${s.name}</b> <span class="muted">(${s.category || 'متجر'})</span> —
+          <b style="color:${open ? '#137333' : '#c5221f'}">${open ? 'مفتوح 🟢' : 'مغلق 🔴'}</b>
+        </div>
+        <button type="button" class="status-toggle-btn" style="background:${open ? '#c5221f' : '#137333'}" onclick="toggleStoreStatus('${s.id}', '${s.status || "open"}')">
+          ${open ? 'إغلاق 🔴' : 'فتح 🟢'}
+        </button>
+      </div>
+    `;
+  }).join("");
+}
+
+function onStoreOwnerSelectionChange() {
+  renderStoreOwnerStatusBar();
+  fetchStoreOwnerOrders();
+}
+
+async function toggleStoreStatus(storeId, currentStatus) {
+  if (!storeId) return;
+  const nextStatus = isStoreOpenStatus(currentStatus) ? "closed" : "open";
+  try {
+    const { error } = await supabaseClient
+      .from('stores')
+      .update({ status: nextStatus })
+      .eq('id', storeId);
+
+    if (error) throw error;
+
+    allStoresList = allStoresList.map(s =>
+      String(s.id) === String(storeId) ? { ...s, status: nextStatus } : s
+    );
+
+    await fetchStores();
+    renderStoreOwnerStatusBar();
+    renderAdminStoresStatusList();
+    updateCart();
+    alert(nextStatus === "open" ? "تم فتح المتجر بنجاح 🟢" : "تم إغلاق المتجر بنجاح 🔴");
+  } catch (err) {
+    alert("تعذر تحديث حالة المتجر: " + err.message);
+  }
+}
 
 function playAlertTone() {
   if (!soundAlertEnabled) return;
@@ -1070,11 +1233,6 @@ function recalculateVisiblePanels() {
   }
 }
 
-function isStoreOpenStatus(status) {
-  const s = String(status || "open").trim().toLowerCase();
-  return s === "open" || s === "مفتوح" || s === "active";
-}
-
 function hasClosedStoreInCart() {
   return cartItems.some(item => {
     if (!item.store_id || String(item.store_id).startsWith("chef-")) return false;
@@ -1244,6 +1402,9 @@ async function fetchStores() {
     }
 
     renderFeaturedRestaurants(restaurantStores);
+    renderPharmacyQuickProducts();
+    renderStoreOwnerStatusBar();
+    renderAdminStoresStatusList();
     updateCart();
   } catch (err) {
     console.error('خطأ في جلب المتاجر:', err);
@@ -1251,6 +1412,7 @@ async function fetchStores() {
       document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
     }
     renderFeaturedRestaurants([]);
+    renderPharmacyQuickProducts();
   }
 }
 
@@ -1262,7 +1424,7 @@ function renderProducts(){
       <small>${p.unit} — ${p.cat}</small>
       <div class="price-row">
         <span class="price">${money(p.price)}</span>
-        <button class="add" onclick="addCatalogItem(${p.id})">+ أضف</button>
+        <button class="add" onclick="addCatalogItem('${p.id}')">+ أضف</button>
       </div>
     </article>
   `).join("");
@@ -1274,7 +1436,7 @@ function renderProducts(){
 }
 
 function addCatalogItem(id){
-  const p = catalog.find(x => x.id === id);
+  const p = catalog.find(x => String(x.id) === String(id));
   if (!p) return;
   const key = `cat_${p.id}`;
   const existing = cartItems.find(x => x.key === key);
@@ -1503,15 +1665,18 @@ function showStoreOwnerPanel() {
   const select = document.getElementById("storeOwnerSelect");
   if (allStoresList.length) {
     select.innerHTML = allStoresList.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+    renderStoreOwnerStatusBar();
     fetchStoreOwnerOrders();
   } else {
     supabaseClient.from('stores').select('*').then(({ data }) => {
       if (data && data.length) {
         allStoresList = data;
         select.innerHTML = data.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+        renderStoreOwnerStatusBar();
         fetchStoreOwnerOrders();
       } else {
         select.innerHTML = '<option value="">لا توجد متاجر مضافة</option>';
+        renderStoreOwnerStatusBar();
       }
     });
   }
@@ -1652,6 +1817,7 @@ async function showAdmin(){
  document.getElementById("storePanel").classList.remove("show");
  document.getElementById("courierPanel").classList.remove("show");
  document.getElementById("admin").classList.add("show");
+ renderAdminStoresStatusList();
  renderAdminPromoList();
  updateSoundButtons();
  subscribeOrdersRealtime();
@@ -1775,6 +1941,7 @@ async function updateOrderStatus(orderId, newStatus) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderFeaturedRestaurants([]);
+  renderPharmacyQuickProducts();
   fetchStores();
   renderProducts();
   updateCart();
