@@ -29,7 +29,9 @@
 .warn-box{background:#fff8eb;border:1px solid #f4cf8a;color:#7a4f01;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11px}
 .summary-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
 .summary-row{display:flex;justify-content:space-between;margin:5px 0}
-.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}.admin{display:none}.admin.show{display:block}.order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px;background:#fcfdfb}
+.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}
+.admin,.store-panel{display:none}.admin.show,.store-panel.show{display:block}
+.order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px;background:#fcfdfb}
 .admin-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:#f4f8f6;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px}
 .rt-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:700;background:#e2e8f0;color:#334155}
 .rt-pill.live{background:#dcfce7;color:#166534}
@@ -65,11 +67,37 @@
   <div class="step"><b>② أكد بياناتك</b><p>اكتب اسمك ورقم هاتفك وعنوان التوصيل بالتفصيل.</p></div>
   <div class="step"><b>③ استلم عند الباب</b><p>سيتواصل معك فريق التشغيل لتأكيد الطلب والتوصيل.</p></div>
  </div></section>
- <section class="panel"><h3>للمتاجر والمندوبين</h3><p class="muted">يسعدنا انضمام المحلات والمندوبين إلى شبكة وصّال. يتم إدارة العمليات من خلال لوحة تحكم وصّال.</p><button class="add" onclick="showAdmin()">فتح لوحة التحكم الإدارية</button></section>
  
+ <section class="panel">
+  <h3>للمتاجر والمندوبين والإدارة</h3>
+  <p class="muted">يتم إدارة العمليات واستقبال الطلبات من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+    <button class="add" onclick="showStoreOwnerPanel()" style="background:var(--green2)">🏪 لوحة تحكم المتجر</button>
+    <button class="add" onclick="showAdmin()">🛡️ لوحة التحكم الإدارية</button>
+  </div>
+ </section>
+ 
+ <section class="panel store-panel" id="storePanel">
+  <div class="drawer-head">
+    <h3>لوحة تحكم المتجر (استقبال الطلبات)</h3>
+    <button class="close" onclick="closeStorePanel()">×</button>
+  </div>
+  <div class="admin-bar">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <label><b>اختر المتجر:</b></label>
+      <select id="storeOwnerSelect" onchange="fetchStoreOwnerOrders()" style="padding:6px;border-radius:8px;border:1px solid #ccc"></select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span id="storeRealtimeStatus" class="rt-pill">⏳ البث اللحظي للطلبات</span>
+      <button onclick="fetchStoreOwnerOrders()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث</button>
+    </div>
+  </div>
+  <div id="storeOrdersList"><p class="muted">اختر المتجر لعرض الطلبات الخاصة به...</p></div>
+ </section>
+
  <section class="panel admin" id="admin">
   <div class="drawer-head">
-    <h3>لوحة تحكم وصّال (مركز الطلبات)</h3>
+    <h3>لوحة تحكم وصّال (مركز الطلبات العام)</h3>
     <button class="close" onclick="closeAdmin()">×</button>
   </div>
   <div class="admin-bar">
@@ -108,7 +136,9 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CART_STORAGE_KEY = "wassal_cart_v1";
 const storeNameCache = {};
+let allStoresList = [];
 let ordersRealtimeChannel = null;
+let storeRealtimeChannel = null;
 let realtimeRefreshTimer = null;
 
 const catalog=[
@@ -204,6 +234,7 @@ async function fetchStores() {
       return;
     }
 
+    allStoresList = stores;
     stores.forEach(s => { if (s && s.id) storeNameCache[s.id] = s.name; });
 
     container.innerHTML = stores.map(store => `
@@ -404,6 +435,9 @@ async function placeOrder(){
    if (document.getElementById("admin").classList.contains("show")) {
      fetchOrdersFromSupabase();
    }
+   if (document.getElementById("storePanel").classList.contains("show")) {
+     fetchStoreOwnerOrders();
+   }
  } catch(err) {
    console.error("Supabase Error:", err);
    alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + err.message);
@@ -431,11 +465,109 @@ function getStatusLabel(status) {
   return map[status] || `<span class="badge">${status}</span>`;
 }
 
-function setRealtimeBadge(stateText, isLive = false) {
-  const el = document.getElementById("realtimeStatus");
+function setRealtimeBadge(stateText, isLive = false, targetId = "realtimeStatus") {
+  const el = document.getElementById(targetId);
   if (!el) return;
   el.textContent = stateText;
   el.classList.toggle("live", Boolean(isLive));
+}
+
+function showStoreOwnerPanel() {
+  const panel = document.getElementById("storePanel");
+  panel.classList.add("show");
+  const select = document.getElementById("storeOwnerSelect");
+  if (allStoresList.length) {
+    select.innerHTML = allStoresList.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+    fetchStoreOwnerOrders();
+  } else {
+    supabaseClient.from('stores').select('*').then(({ data }) => {
+      if (data && data.length) {
+        allStoresList = data;
+        select.innerHTML = data.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+        fetchStoreOwnerOrders();
+      } else {
+        select.innerHTML = '<option value="">لا توجد متاجر مضافة</option>';
+      }
+    });
+  }
+  subscribeStoreRealtime();
+}
+
+function closeStorePanel() {
+  document.getElementById("storePanel").classList.remove("show");
+  if (storeRealtimeChannel) {
+    supabaseClient.removeChannel(storeRealtimeChannel);
+    storeRealtimeChannel = null;
+  }
+}
+
+function subscribeStoreRealtime() {
+  if (storeRealtimeChannel) return;
+  setRealtimeBadge("⏳ بث المتجر جارٍ...", false, "storeRealtimeStatus");
+
+  storeRealtimeChannel = supabaseClient
+    .channel("wassal-store-orders-realtime")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "orders" },
+      () => {
+        if (!document.getElementById("storePanel").classList.contains("show")) return;
+        fetchStoreOwnerOrders(true);
+      }
+    )
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        setRealtimeBadge("🟢 مباشر للمتجر", true, "storeRealtimeStatus");
+      } else {
+        setRealtimeBadge("⚠️ تعذر البث اللحظي للمتجر", false, "storeRealtimeStatus");
+      }
+    });
+}
+
+async function fetchStoreOwnerOrders(silent = false) {
+  const select = document.getElementById("storeOwnerSelect");
+  const selectedStoreId = select.value;
+  const listDiv = document.getElementById("storeOrdersList");
+  if (!selectedStoreId) {
+    listDiv.innerHTML = "<p class='muted'>يرجى اختيار متجر أولاً.</p>";
+    return;
+  }
+  if (!silent) listDiv.innerHTML = "<p class='muted'>جاري تحميل طلبات المتجر...</p>";
+
+  try {
+    const { data: orders, error } = await supabaseClient
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('store_id', selectedStoreId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!orders || orders.length === 0) {
+      listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة لهذا المتجر حتى الآن.</p>";
+      return;
+    }
+
+    listDiv.innerHTML = orders.map(o => {
+      const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+
+      return `<div class="order">
+        <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+        <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+        <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+        <b>المنتجات المطلوب تحضيرها:</b> ${itemsList}<br>
+        <b>إجمالي المبلغ:</b> ${money(o.total)}<br>
+        ${o.notes ? `<b>ملاحظات:</b> ${o.notes}` : ''}
+        <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+          <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">مقبول / قيد التجهيز</button>
+          <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاهز / جاري التوصيل</button>
+          <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء الطلب</button>
+        </div>
+      </div>`;
+    }).join("");
+  } catch (err) {
+    listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
+  }
 }
 
 function subscribeOrdersRealtime() {
@@ -561,7 +693,12 @@ async function updateOrderStatus(orderId, newStatus) {
     const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) throw error;
     alert("تم التحديث بنجاح! ✅");
-    fetchOrdersFromSupabase();
+    if (document.getElementById("admin").classList.contains("show")) {
+      fetchOrdersFromSupabase(true);
+    }
+    if (document.getElementById("storePanel").classList.contains("show")) {
+      fetchStoreOwnerOrders(true);
+    }
   } catch (err) {
     alert("خطأ: " + err.message);
   }
