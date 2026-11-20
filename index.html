@@ -33,6 +33,8 @@
 .settle-card{background:#f6f9f7;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12px}
 .settle-card b{display:block;font-size:15px;color:var(--green2);margin-top:4px}
 .comm-line{margin-top:6px;padding-top:6px;border-top:1px dashed #e1e8e4;font-size:12px;color:#334155}
+.dispatch-box{margin-top:8px;padding:8px 10px;background:#f4f8f6;border-radius:10px;font-size:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dispatch-box input{padding:5px 8px;border:1px solid #cfd9d4;border-radius:7px;font-size:12px;min-width:125px}
 .field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}
 .admin,.store-panel{display:none}.admin.show,.store-panel.show{display:block}
 .order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px;background:#fcfdfb}
@@ -74,7 +76,7 @@
  
  <section class="panel">
   <h3>للمتاجر والمندوبين والإدارة</h3>
-  <p class="muted">يتم إدارة العمليات واستقبال الطلبات والتسويات من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
+  <p class="muted">يتم إدارة العمليات واستقبال الطلبات والتسويات والتوصيل من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
     <button class="add" onclick="showStoreOwnerPanel()" style="background:var(--green2)">🏪 لوحة تحكم المتجر</button>
     <button class="add" onclick="showAdmin()">🛡️ لوحة التحكم الإدارية</button>
@@ -104,12 +106,20 @@
 
  <section class="panel admin" id="admin">
   <div class="drawer-head">
-    <h3>لوحة تحكم وصّال (مركز الطلبات والعمولات)</h3>
+    <h3>لوحة تحكم وصّال (مركز الطلبات والعمولات والتوصيل)</h3>
     <button class="close" onclick="closeAdmin()">×</button>
   </div>
   <div class="admin-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="realtimeStatus" class="rt-pill">⏳ وضع التحديث اللحظي في الانتظار</span>
+      <label><b>حالة التوصيل:</b></label>
+      <select id="deliveryFilter" onchange="renderAdminOrdersList(lastAdminOrders)" style="padding:6px;border-radius:8px;border:1px solid #ccc">
+        <option value="all">كل الطلبات</option>
+        <option value="preparing">قيد التجهيز</option>
+        <option value="on_the_way">جاري التوصيل</option>
+        <option value="delivered">تم التوصيل</option>
+        <option value="cancelled">ملغي</option>
+      </select>
       <label><b>نسبة العمولة %:</b></label>
       <input id="adminCommissionRate" type="number" min="0" max="100" step="0.5" value="10" onchange="recalculateVisiblePanels()" style="width:72px;padding:6px;border-radius:8px;border:1px solid #ccc">
     </div>
@@ -147,6 +157,7 @@ const SUPABASE_KEY = "sb_publishable_52V8TEri0EWrESm9AKfRgw_oNtK3qUh";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CART_STORAGE_KEY = "wassal_cart_v1";
+const DISPATCH_STORAGE_KEY = "wassal_dispatch_v1";
 const storeNameCache = {};
 let allStoresList = [];
 let lastStoreOrders = [];
@@ -184,6 +195,61 @@ function saveCart(items) {
   try {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   } catch (_) {}
+}
+
+function loadDispatchMap() {
+  try {
+    const raw = localStorage.getItem(DISPATCH_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveDispatchMap(mapObj) {
+  try {
+    localStorage.setItem(DISPATCH_STORAGE_KEY, JSON.stringify(mapObj));
+  } catch (_) {}
+}
+
+let dispatchMap = loadDispatchMap();
+
+function getOrderCourier(order) {
+  const localInfo = dispatchMap[String(order.id)] || {};
+  return {
+    name: order.courier_name || localInfo.name || "",
+    phone: order.courier_phone || localInfo.phone || ""
+  };
+}
+
+async function assignCourier(orderId) {
+  const nameInput = document.getElementById(`courierName_${orderId}`);
+  const phoneInput = document.getElementById(`courierPhone_${orderId}`);
+  const courierName = nameInput ? nameInput.value.trim() : "";
+  const courierPhone = phoneInput ? phoneInput.value.trim() : "";
+
+  if (!courierName) {
+    alert("من فضلك أدخل اسم المندوب أولاً.");
+    return;
+  }
+
+  dispatchMap[String(orderId)] = { name: courierName, phone: courierPhone };
+  saveDispatchMap(dispatchMap);
+
+  try {
+    const { error } = await supabaseClient
+      .from('orders')
+      .update({ courier_name: courierName, courier_phone: courierPhone })
+      .eq('id', orderId);
+
+    if (error && !/column.*does not exist/i.test(error.message || "")) {
+      console.warn("Dispatch optional column warning:", error.message);
+    }
+  } catch (_) {}
+
+  alert("تم حفظ بيانات المندوب ✅");
+  renderAdminOrdersList(lastAdminOrders);
 }
 
 let cartItems = loadCart();
@@ -726,6 +792,8 @@ function renderAdminOrdersList(orders) {
   const summaryEl = document.getElementById("adminSettlementSummary");
   const listDiv = document.getElementById("ordersList");
   const rate = getCommissionRate("adminCommissionRate");
+  const filterSelect = document.getElementById("deliveryFilter");
+  const selectedFilter = filterSelect ? filterSelect.value : "all";
 
   if (!orders || orders.length === 0) {
     if (summaryEl) summaryEl.innerHTML = "";
@@ -737,7 +805,18 @@ function renderAdminOrdersList(orders) {
     summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
   }
 
-  listDiv.innerHTML = orders.map(o => {
+  const filteredOrders = orders.filter(o => {
+    if (selectedFilter === "all") return true;
+    if (selectedFilter === "cancelled") return o.status === "cancelled" || o.status === "canceled";
+    return o.status === selectedFilter;
+  });
+
+  if (!filteredOrders.length) {
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مطابقة لحالة التوصيل المحددة.</p>";
+    return;
+  }
+
+  listDiv.innerHTML = filteredOrders.map(o => {
     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
     const storeLabel = o.store_id
       ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
@@ -746,6 +825,10 @@ function renderAdminOrdersList(orders) {
     const commText = calc.isCanceled
       ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
       : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+    const courier = getOrderCourier(o);
+    const courierSummary = courier.name
+      ? `المندوب: <b>${courier.name}</b>${courier.phone ? ` (${courier.phone})` : ""}`
+      : `لم يُسند مندوب بعد`;
 
     return `<div class="order">
       <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
@@ -755,7 +838,13 @@ function renderAdminOrdersList(orders) {
       <b>المنتجات:</b> ${itemsList}<br>
       <b>الإجمالي:</b> ${money(o.total)}
       <div class="comm-line">${commText}</div>
-      ${o.notes ? `<div style="margin-top:4px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
+      <div class="dispatch-box">
+        <span>${courierSummary}</span>
+        <input id="courierName_${o.id}" value="${courier.name.replace(/"/g, '"')}" placeholder="اسم المندوب">
+        <input id="courierPhone_${o.id}" value="${courier.phone.replace(/"/g, '"')}" placeholder="هاتف المندوب">
+        <button onclick="assignCourier('${o.id}')" style="background:var(--green);color:#fff;padding:5px 10px;border-radius:7px;font-weight:700">حفظ المندوب</button>
+      </div>
+      ${o.notes ? `<div style="margin-top:6px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
       <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
         <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">قيد التجهيز</button>
         <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاري التوصيل</button>
