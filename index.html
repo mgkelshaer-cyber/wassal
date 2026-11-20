@@ -13,13 +13,23 @@
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px}.logo{width:42px;height:42px;border-radius:14px;background:var(--orange);display:grid;place-items:center;color:var(--green);font-size:24px}
 .top small{display:block;color:#d6e4df;font-size:11px;font-weight:400;margin-top:3px}.top button{background:#fff;color:var(--green);padding:10px 14px;border-radius:12px;font-weight:700}
 .wrap{max-width:1120px;margin:auto;padding:20px 16px 70px}
-.hero{background:linear-gradient(120deg,#123c3a,#236c62);color:#fff;border-radius:24px;padding:28px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;overflow:hidden;position:relative}
-.hero h1{font-size:clamp(26px,4vw,42px);line-height:1.35;margin:5px 0 10px}.hero p{color:#dcebe6;line-height:1.9;margin:0 0 18px}.hero .tag{color:#ffd49c;font-size:13px;font-weight:700}
+.hero{background:linear-gradient(120deg,#123c3a,#236c62);color:#fff;border-radius:24px;padding:24px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;overflow:hidden;position:relative}
+.hero h1{font-size:clamp(24px,3.5vw,36px);line-height:1.3;margin:5px 0 10px}.hero p{color:#dcebe6;line-height:1.8;margin:0 0 16px;font-size:14px}.hero .tag{color:#ffd49c;font-size:13px;font-weight:700}
 .address{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:7px;border-radius:14px;max-width:560px}.address select,.address input{border:0;outline:0;padding:9px;background:#fff;color:var(--ink);min-width:120px;flex:1}.address button{background:var(--orange);color:#173d38;padding:10px 16px;border-radius:10px;font-weight:800}
-.hero-art{display:grid;place-items:center;font-size:112px;opacity:.95}
-.section-head{display:flex;justify-content:space-between;align-items:end;margin:28px 0 14px;gap:12px}.section-head h2{font-size:21px;margin:0}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
-.categories{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.cat{background:white;border:1px solid var(--line);border-radius:16px;padding:15px 8px;text-align:center;color:var(--ink);font-weight:700}.cat span{display:block;font-size:30px;margin-bottom:8px}.cat.active{border:2px solid var(--green2);background:#edf6f2}
+.hero-art{display:grid;place-items:center;font-size:100px;opacity:.95}
+
+/* الأيقونات الرئيسية والتبويب */
+.main-nav-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 10px}
+.nav-tab-btn{background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;font-weight:800;font-size:15px;color:var(--ink);transition:all .2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
+.nav-tab-btn span.icon{font-size:32px;line-height:1}
+.nav-tab-btn.active{border-color:var(--green2);background:#edf6f2;color:var(--green);box-shadow:0 4px 12px rgba(27,98,91,0.12)}
+.nav-tab-btn small{font-size:11px;font-weight:400;color:var(--muted)}
+
+.tab-content-section{display:none}.tab-content-section.active{display:block}
+.section-head{display:flex;justify-content:space-between;align-items:end;margin:20px 0 14px;gap:12px}.section-head h2{font-size:20px;margin:0}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
 .products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:205px}.pic{height:82px;border-radius:13px;background:#f2f5f1;display:grid;place-items:center;font-size:43px;margin-bottom:12px}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted)}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700}
+
 .panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:22px}.panel h3{margin:0 0 12px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.step{background:#f6f8f5;border-radius:13px;padding:14px}.step b{display:block;margin-bottom:5px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
 .footer{background:#102f2d;color:#d8e5e1;text-align:center;padding:22px;font-size:12px}
 .cart-fab{position:fixed;bottom:18px;left:18px;background:var(--orange);color:#173d38;border-radius:50px;padding:14px 19px;font-weight:800;box-shadow:0 8px 25px #0002;z-index:5}
@@ -29,7 +39,7 @@
 .warn-box{background:#fff8eb;border:1px solid #f4cf8a;color:#7a4f01;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11px}
 .promo-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
 .promo-row{display:flex;gap:8px;margin-top:6px}
-.promo-row input{flex:1;border:1px solid #dce4de;border-radius:9px;padding:8px 10px;background:#fff;outline-color:var(--green2);text-transform:uppercase}
+.promo-row input{flex:1;border:1px solid #dce4de;border-radius:99px;padding:8px 12px;background:#fff;outline-color:var(--green2);text-transform:uppercase}
 .promo-msg{font-size:11px;margin-top:6px;line-height:1.5}
 .summary-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
 .summary-row{display:flex;justify-content:space-between;margin:5px 0}
@@ -68,7 +78,8 @@
 .promo-admin-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
 .promo-admin-grid input,.promo-admin-grid select{border:1px solid #dce4de;border-radius:8px;padding:8px;background:#fff;font-size:12px}
 .promo-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px}
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:repeat(3,1fr);gap:8px}.nav-tab-btn{padding:12px 6px;font-size:13px}.nav-tab-btn span.icon{font-size:26px}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -79,10 +90,37 @@
 </header>
 <main class="wrap">
  <section class="hero">
-  <div><div class="tag">خدمة توصيل محلية في دسوق والقرى المحيطة</div><h1>كل طلباتك.. عند باب بيتك</h1><p>اختار احتياجاتك من الأقسام، ابعت طلبك، ومندوب وصّال يوصله لحد عندك.</p>
-   <div class="address"><select id="area"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى - اكتبها في العنوان</option></select><input id="quickAddress" placeholder="اسم الشارع أو المنطقة"><button onclick="document.getElementById('customerAddress').value=document.getElementById('quickAddress').value;openCart()">اطلب الآن</button></div>
-  </div><div class="hero-art">🛵</div>
+  <div>
+    <div class="tag">خدمة توصيل محلية في دسوق والقرى المحيطة</div>
+    <h1>كل طلباتك.. عند باب بيتك</h1>
+    <p>اختر القسم المناسب، تصفح المتاجر أو المنتجات، ومندوب وصّال يوصله لحد عندك.</p>
+    <div class="address">
+      <select id="area"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى - اكتبها في العنوان</option></select>
+      <input id="quickAddress" placeholder="اسم الشارع أو المنطقة">
+      <button onclick="document.getElementById('customerAddress').value=document.getElementById('quickAddress').value;openCart()">اطلب الآن</button>
+    </div>
+  </div>
+  <div class="hero-art">🛵</div>
  </section>
+
+ <!-- الأقساب المخصصة بالايفونات الثلاثة -->
+ <nav class="main-nav-tabs">
+   <button class="nav-tab-btn active" id="tabBtnStores" onclick="switchMainTab('stores')">
+     <span class="icon">🏪</span>
+     <span>المتاجر المتاحة</span>
+     <small>سوبر ماركت، مخبز، صيدلية...</small>
+   </button>
+   <button class="nav-tab-btn" id="tabBtnRestaurants" onclick="switchMainTab('restaurants')">
+     <span class="icon">🍽️</span>
+     <span>المطاعم</span>
+     <small>وجبات ومأكولات جاهزة</small>
+   </button>
+   <button class="nav-tab-btn" id="tabBtnProducts" onclick="switchMainTab('products')">
+     <span class="icon">🛍️</span>
+     <span>المنتجات العامة</span>
+     <small>شراء سريع مقترح</small>
+   </button>
+ </nav>
 
  <section class="panel" id="trackSection">
   <h3>🔍 تتبع طلبك لحظياً</h3>
@@ -94,21 +132,33 @@
   <div id="trackResult"></div>
  </section>
 
- <div class="section-head"><div><h2>المتاجر المتاحة</h2><p>اختر المتجر المناسب لطلبك</p></div></div>
- <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
+ <!-- قسم 1: المتاجر المتاحة -->
+ <div class="tab-content-section active" id="secStores">
+   <div class="section-head"><div><h2>🏪 المتاجر المتاحة</h2><p>المتاجر والسوبرماركت والصيدليات المسجلة بالمنظومة (قابل للإضافة مستقبلاً)</p></div></div>
+   <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
+ </div>
 
- <div class="section-head"><div><h2 id="productTitle">منتجات مقترحة</h2><p>الأسعار والمعلومات متصلة بقاعدة البيانات</p></div></div>
- <section class="products" id="products"></section>
+ <!-- قسم 2: المطاعم -->
+ <div class="tab-content-section" id="secRestaurants">
+   <div class="section-head"><div><h2>🍽️ قائمة المطاعم</h2><p>المطاعم ومنافذ المأكولات الجاهزة (قابل للإضافة والتوسع مستقبلاً)</p></div></div>
+   <section class="products" id="restaurantsContainer"><p class="muted">جاري تحميل المطاعم...</p></section>
+ </div>
+
+ <!-- قسم 3: المنتجات العامة المعروضة -->
+ <div class="tab-content-section" id="secProducts">
+   <div class="section-head"><div><h2>🛍️ المنتجات العامة المعروضة</h2><p>جميع الاصناف والمنتجات المقترحة المتاحة للشراء المباشر</p></div></div>
+   <section class="products" id="products"></section>
+ </div>
 
  <section class="panel"><h3>الطلب من وصّال سهل</h3><div class="steps">
-  <div class="step"><b>① اختار طلبك</b><p>تصفح المنتجات وأضف احتياجاتك إلى السلة.</p></div>
+  <div class="step"><b>① اختار طلبك</b><p>تصفح المنتجات أو المتجر وأضف احتياجاتك إلى السلة.</p></div>
   <div class="step"><b>② أكد بياناتك</b><p>اكتب اسمك ورقم هاتفك وعنوان التوصيل بالتفصيل.</p></div>
   <div class="step"><b>③ استلم عند الباب</b><p>سيتواصل معك فريق التشغيل لتأكيد الطلب والتوصيل.</p></div>
  </div></section>
  
  <section class="panel">
   <h3>للمتاجر والمندوبين والإدارة</h3>
-  <p class="muted">يتم إدارة العمليات واستقبال الطلبات والتسويات والتوصيل والإشعارات الفورية من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
+  <p class="muted">إدارة العمليات واستقبال الطلبات والتسويات والتوصيل والإشعارات الفورية عبر لوحات التحكم المخصصة.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
     <button class="add" onclick="showStoreOwnerPanel()" style="background:var(--green2)">🏪 لوحة تحكم المتجر</button>
     <button class="add" onclick="showCourierPanel()" style="background:#5b21b6">🛵 لوحة المندوب</button>
@@ -118,7 +168,7 @@
 
  <section class="panel courier-panel" id="courierPanel">
   <div class="drawer-head">
-    <h3>لوحة المندوب (متابعة التوصيل: جاري التوصيل ← تم التوصيل)</h3>
+    <h3>لوحة المندوب (متابعة التوصيل)</h3>
     <button class="close" onclick="closeCourierPanel()">×</button>
   </div>
   <div class="admin-bar">
@@ -260,6 +310,22 @@ const DEFAULT_PROMO_RULES = {
   WELCOME20: { type: "fixed", value: 20, bearer: "platform", active: true }
 };
 
+function switchMainTab(tabName) {
+  document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content-section').forEach(sec => sec.classList.remove('active'));
+
+  if (tabName === 'stores') {
+    document.getElementById('tabBtnStores').classList.add('active');
+    document.getElementById('secStores').classList.add('active');
+  } else if (tabName === 'restaurants') {
+    document.getElementById('tabBtnRestaurants').classList.add('active');
+    document.getElementById('secRestaurants').classList.add('active');
+  } else if (tabName === 'products') {
+    document.getElementById('tabBtnProducts').classList.add('active');
+    document.getElementById('secProducts').classList.add('active');
+  }
+}
+
 function loadPromoRules() {
   try {
     const raw = localStorage.getItem(PROMO_RULES_KEY);
@@ -328,18 +394,9 @@ function savePromoRule() {
   const value = Number(valEl ? valEl.value : 0);
   const bearer = bearerEl ? bearerEl.value : "platform";
 
-  if (!code) {
-    alert("أدخل رمز كود الخصم أولاً.");
-    return;
-  }
-  if (!value || value <= 0) {
-    alert("أدخل قيمة خصم صحيحة أكبر من صفر.");
-    return;
-  }
-  if (type === "percent" && value > 100) {
-    alert("نسبة الخصم لا يمكن أن تتجاوز 100%.");
-    return;
-  }
+  if (!code) { alert("أدخل رمز كود الخصم أولاً."); return; }
+  if (!value || value <= 0) { alert("أدخل قيمة خصم صحيحة أكبر من صفر."); return; }
+  if (type === "percent" && value > 100) { alert("نسبة الخصم لا يمكن أن تتجاوز 100%."); return; }
 
   promoRules[code] = { type, value, bearer, active: true };
   savePromoRules(promoRules);
@@ -438,21 +495,13 @@ function toggleSoundAlert() {
 }
 
 async function requestBrowserNotificationPermission() {
-  if (!("Notification" in window)) {
-    alert("متصفحك لا يدعم إشعارات سطح المكتب.");
-    return;
-  }
-  if (Notification.permission === "granted") {
-    alert("إشعارات المتصفح مفعّلة بالفعل ✅");
-    return;
-  }
+  if (!("Notification" in window)) { alert("متصفحك لا يدعم إشعارات سطح المكتب."); return; }
+  if (Notification.permission === "granted") { alert("إشعارات المتصفح مفعّلة بالفعل ✅"); return; }
   try {
     const perm = await Notification.requestPermission();
     if (perm === "granted") {
       new Notification("وصّال دسوق", { body: "تم تفعيل الإشعارات الفورية للطلبات." });
-    } else {
-      alert("لم يتم منح إذن إشعارات المتصفح.");
-    }
+    } else { alert("لم يتم منح إذن إشعارات المتصفح."); }
   } catch (_) {}
 }
 
@@ -489,9 +538,7 @@ function triggerInstantNotification(payload, panelType) {
   playAlertTone();
 
   if ("Notification" in window && Notification.permission === "granted") {
-    try {
-      new Notification("وصّال دسوق", { body: label });
-    } catch (_) {}
+    try { new Notification("وصّال دسوق", { body: label }); } catch (_) {}
   }
 }
 
@@ -500,15 +547,11 @@ function loadCart() {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
-    return [];
-  }
+  } catch (_) { return []; }
 }
 
 function saveCart(items) {
-  try {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  } catch (_) {}
+  try { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items)); } catch (_) {}
 }
 
 function loadSavedPromoCode() {
@@ -516,9 +559,7 @@ function loadSavedPromoCode() {
     const raw = String(localStorage.getItem(PROMO_STORAGE_KEY) || "").trim().toUpperCase();
     const r = promoRules[raw];
     return r && r.active !== false ? raw : "";
-  } catch (_) {
-    return "";
-  }
+  } catch (_) { return ""; }
 }
 
 function savePromoCode(code) {
@@ -559,15 +600,9 @@ function setPromoMessage(text, isError = false) {
 function applyPromoCode() {
   const input = document.getElementById("promoCodeInput");
   const code = String(input ? input.value : "").trim().toUpperCase();
-  if (!code) {
-    setPromoMessage("أدخل كود خصم أولاً.", true);
-    return;
-  }
+  if (!code) { setPromoMessage("أدخل كود خصم أولاً.", true); return; }
   const rule = promoRules[code];
-  if (!rule || rule.active === false) {
-    setPromoMessage("كود الخصم غير صالح أو غير نشط حالياً.", true);
-    return;
-  }
+  if (!rule || rule.active === false) { setPromoMessage("كود الخصم غير صالح أو غير نشط حالياً.", true); return; }
   activePromoCode = code;
   savePromoCode(code);
   setPromoMessage(`تم تطبيق الكود ${code} (${formatPromoRuleLabel(code, rule)}) ✅`, false);
@@ -588,15 +623,11 @@ function loadDispatchMap() {
     const raw = localStorage.getItem(DISPATCH_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
     return parsed && typeof parsed === "object" ? parsed : {};
-  } catch (_) {
-    return {};
-  }
+  } catch (_) { return {}; }
 }
 
 function saveDispatchMap(mapObj) {
-  try {
-    localStorage.setItem(DISPATCH_STORAGE_KEY, JSON.stringify(mapObj));
-  } catch (_) {}
+  try { localStorage.setItem(DISPATCH_STORAGE_KEY, JSON.stringify(mapObj)); } catch (_) {}
 }
 
 let dispatchMap = loadDispatchMap();
@@ -615,10 +646,7 @@ async function assignCourier(orderId) {
   const courierName = nameInput ? nameInput.value.trim() : "";
   const courierPhone = phoneInput ? phoneInput.value.trim() : "";
 
-  if (!courierName) {
-    alert("من فضلك أدخل اسم المندوب أولاً.");
-    return;
-  }
+  if (!courierName) { alert("من فضلك أدخل اسم المندوب أولاً."); return; }
 
   dispatchMap[String(orderId)] = { name: courierName, phone: courierPhone };
   saveDispatchMap(dispatchMap);
@@ -661,13 +689,13 @@ function populateCourierSuggestions(orders) {
 function onCourierIdentityChange() {
   const input = document.getElementById("courierIdentityInput");
   const val = input ? input.value.trim() : "";
-  try {
-    localStorage.setItem(COURIER_ACTIVE_KEY, val);
-  } catch (_) {}
+  try { localStorage.setItem(COURIER_ACTIVE_KEY, val); } catch (_) {}
   renderCourierOrdersList(lastCourierAllOrders);
 }
 
 function showCourierPanel() {
+  document.getElementById("storePanel").classList.remove("show");
+  document.getElementById("admin").classList.remove("show");
   const panel = document.getElementById("courierPanel");
   panel.classList.add("show");
   const input = document.getElementById("courierIdentityInput");
@@ -695,14 +723,10 @@ function subscribeCourierRealtime() {
 
   courierRealtimeChannel = supabaseClient
     .channel("wassal-courier-orders-realtime")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "orders" },
-      () => {
-        if (!document.getElementById("courierPanel").classList.contains("show")) return;
-        fetchCourierOrders(true);
-      }
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+      if (!document.getElementById("courierPanel").classList.contains("show")) return;
+      fetchCourierOrders(true);
+    })
     .subscribe((status) => {
       if (status === "SUBSCRIBED") {
         setRealtimeBadge("🟢 مباشر للمندوب", true, "courierRealtimeStatus");
@@ -714,9 +738,7 @@ function subscribeCourierRealtime() {
 
 async function fetchCourierOrders(silent = false) {
   const listDiv = document.getElementById("courierOrdersList");
-  if (!silent && listDiv) {
-    listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات المسندة...</p>";
-  }
+  if (!silent && listDiv) { listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات المسندة...</p>"; }
   try {
     const { data: orders, error } = await supabaseClient
       .from('orders')
@@ -729,9 +751,7 @@ async function fetchCourierOrders(silent = false) {
     populateCourierSuggestions(lastCourierAllOrders);
     renderCourierOrdersList(lastCourierAllOrders);
   } catch (err) {
-    if (listDiv) {
-      listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
-    }
+    if (listDiv) { listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>"; }
   }
 }
 
@@ -851,16 +871,12 @@ function subscribeTrackRealtime(orderNumber) {
 
   trackRealtimeChannel = supabaseClient
     .channel(`wassal-track-${orderNumber}`)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "orders" },
-      (payload) => {
-        const rec = payload?.new || payload?.old || {};
-        if (!rec.order_number || String(rec.order_number).trim().toLowerCase() === orderNumber.toLowerCase()) {
-          trackOrderByNumber(orderNumber, true);
-        }
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+      const rec = payload?.new || payload?.old || {};
+      if (!rec.order_number || String(rec.order_number).trim().toLowerCase() === orderNumber.toLowerCase()) {
+        trackOrderByNumber(orderNumber, true);
       }
-    )
+    })
     .subscribe();
 }
 
@@ -875,13 +891,9 @@ async function trackOrderByNumber(explicitNum = "", silent = false) {
   }
 
   if (input && explicitNum) input.value = orderNum;
-  try {
-    localStorage.setItem(TRACK_ORDER_KEY, orderNum);
-  } catch (_) {}
+  try { localStorage.setItem(TRACK_ORDER_KEY, orderNum); } catch (_) {}
 
-  if (!silent && resultDiv) {
-    resultDiv.innerHTML = "<p class='muted'>جاري البحث عن حالة الطلب...</p>";
-  }
+  if (!silent && resultDiv) { listDiv.innerHTML = "<p class='muted'>جاري البحث عن حالة الطلب...</p>"; }
 
   try {
     const { data, error } = await supabaseClient
@@ -893,15 +905,11 @@ async function trackOrderByNumber(explicitNum = "", silent = false) {
 
     if (error) throw error;
     const found = Array.isArray(data) && data.length ? data[0] : null;
-    if (found) {
-      await ensureStoreNamesLoaded([found]);
-    }
+    if (found) { await ensureStoreNamesLoaded([found]); }
     renderTrackedOrderCard(found);
     subscribeTrackRealtime(orderNum);
   } catch (err) {
-    if (resultDiv) {
-      resultDiv.innerHTML = "<p style='color:red;'>تعذر جلب حالة الطلب: " + err.message + "</p>";
-    }
+    if (resultDiv) { resultDiv.innerHTML = "<p style='color:red;'>تعذر جلب حالة الطلب: " + err.message + "</p>"; }
   }
 }
 
@@ -937,12 +945,7 @@ function parseOrderPromoFromNotes(order) {
     bearer = "split";
   }
 
-  return {
-    code: matchedCode,
-    discount: inferredDiscount,
-    bearer,
-    baseAmount: rawSubtotal
-  };
+  return { code: matchedCode, discount: inferredDiscount, bearer, baseAmount: rawSubtotal };
 }
 
 function calculateOrderCommission(order, ratePercent) {
@@ -950,16 +953,7 @@ function calculateOrderCommission(order, ratePercent) {
   const promoInfo = parseOrderPromoFromNotes(order);
   const baseAmount = promoInfo.baseAmount;
   if (isCanceled || baseAmount <= 0) {
-    return {
-      commission: 0,
-      netStore: 0,
-      discount: 0,
-      storeDiscountShare: 0,
-      platformDiscountShare: 0,
-      bearer: promoInfo.bearer,
-      code: promoInfo.code,
-      isCanceled
-    };
+    return { commission: 0, netStore: 0, discount: 0, storeDiscountShare: 0, platformDiscountShare: 0, bearer: promoInfo.bearer, code: promoInfo.code, isCanceled };
   }
 
   const commission = Number(((baseAmount * ratePercent) / 100).toFixed(2));
@@ -980,17 +974,7 @@ function calculateOrderCommission(order, ratePercent) {
   }
 
   const netStore = Number(Math.max(0, rawNetBeforeDiscount - storeDiscountShare).toFixed(2));
-
-  return {
-    commission,
-    netStore,
-    discount: promoInfo.discount,
-    storeDiscountShare,
-    platformDiscountShare,
-    bearer: promoInfo.bearer,
-    code: promoInfo.code,
-    isCanceled
-  };
+  return { commission, netStore, discount: promoInfo.discount, storeDiscountShare, platformDiscountShare, bearer: promoInfo.bearer, code: promoInfo.code, isCanceled };
 }
 
 function buildSettlementSummaryHtml(orders, ratePercent) {
@@ -1071,27 +1055,29 @@ async function resolveStoreNamesForCart() {
 
 async function fetchStores() {
   try {
-    const { data: stores, error } = await supabaseClient
-      .from('stores')
-      .select('*');
-
+    const { data: stores, error } = await supabaseClient.from('stores').select('*');
     if (error) throw error;
 
     const container = document.getElementById('storesContainer');
+    const restContainer = document.getElementById('restaurantsContainer');
     if (!container) return;
 
     if (!stores || stores.length === 0) {
       container.innerHTML = '<p class="muted">لا توجد متاجر مضافة حالياً.</p>';
+      if (restContainer) restContainer.innerHTML = '<p class="muted">لا توجد مطاعم مضافة حالياً.</p>';
       return;
     }
 
     allStoresList = stores;
     stores.forEach(s => { if (s && s.id) storeNameCache[s.id] = s.name; });
 
-    container.innerHTML = stores.map(store => `
+    const generalStores = stores.filter(s => (s.category || '').trim() !== 'مطاعم' && (s.category || '').trim() !== 'مطعم');
+    const restaurantStores = stores.filter(s => (s.category || '').trim() === 'مطاعم' || (s.category || '').trim() === 'مطعم');
+
+    const renderStoreCard = store => `
       <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
         <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
-          ${!store.image_url ? '🏪' : ''}
+          ${!store.image_url ? (store.category === 'مطاعم' ? '🍽️' : '🏪') : ''}
         </div>
         <h3>${store.name}</h3>
         <small>التصنيف: ${store.category || 'عام'}</small>
@@ -1101,12 +1087,24 @@ async function fetchStores() {
           </span>
         </div>
       </article>
-    `).join("");
+    `;
+
+    container.innerHTML = generalStores.length
+      ? generalStores.map(renderStoreCard).join("")
+      : '<p class="muted">لا توجد متاجر بهذه الفئة بعد.</p>';
+
+    if (restContainer) {
+      restContainer.innerHTML = restaurantStores.length
+        ? restaurantStores.map(renderStoreCard).join("")
+        : '<p class="muted">لا توجد مطاعم مسجلة بجدول المتاجر بعد.</p>';
+    }
 
     updateCart();
   } catch (err) {
     console.error('خطأ في جلب المتاجر:', err);
-    document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
+    if (document.getElementById('storesContainer')) {
+      document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
+    }
   }
 }
 
@@ -1115,7 +1113,7 @@ function renderProducts(){
     <article class="product">
       <div class="pic">${p.emoji}</div>
       <h3>${p.name}</h3>
-      <small>${p.unit}</small>
+      <small>${p.unit} - ${p.cat}</small>
       <div class="price-row">
         <span class="price">${money(p.price)}</span>
         <button class="add" onclick="addCatalogItem(${p.id})">+ أضف</button>
@@ -1302,15 +1300,9 @@ async function placeOrder(){
    document.getElementById("customerPhone").value = "";
    document.getElementById("customerAddress").value = "";
    document.getElementById("notes").value = "";
-   if (document.getElementById("admin").classList.contains("show")) {
-     fetchOrdersFromSupabase();
-   }
-   if (document.getElementById("storePanel").classList.contains("show")) {
-     fetchStoreOwnerOrders();
-   }
-   if (document.getElementById("courierPanel").classList.contains("show")) {
-     fetchCourierOrders(true);
-   }
+   if (document.getElementById("admin").classList.contains("show")) { fetchOrdersFromSupabase(); }
+   if (document.getElementById("storePanel").classList.contains("show")) { fetchStoreOwnerOrders(); }
+   if (document.getElementById("courierPanel").classList.contains("show")) { fetchCourierOrders(true); }
  } catch(err) {
    console.error("Supabase Error:", err);
    alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + err.message);
@@ -1347,6 +1339,8 @@ function setRealtimeBadge(stateText, isLive = false, targetId = "realtimeStatus"
 }
 
 function showStoreOwnerPanel() {
+  document.getElementById("courierPanel").classList.remove("show");
+  document.getElementById("admin").classList.remove("show");
   const panel = document.getElementById("storePanel");
   panel.classList.add("show");
   updateSoundButtons();
@@ -1382,15 +1376,11 @@ function subscribeStoreRealtime() {
 
   storeRealtimeChannel = supabaseClient
     .channel("wassal-store-orders-realtime")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "orders" },
-      (payload) => {
-        if (!document.getElementById("storePanel").classList.contains("show")) return;
-        triggerInstantNotification(payload, "store");
-        fetchStoreOwnerOrders(true);
-      }
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+      if (!document.getElementById("storePanel").classList.contains("show")) return;
+      triggerInstantNotification(payload, "store");
+      fetchStoreOwnerOrders(true);
+    })
     .subscribe((status) => {
       if (status === "SUBSCRIBED") {
         setRealtimeBadge("🟢 مباشر للمتجر", true, "storeRealtimeStatus");
@@ -1411,16 +1401,12 @@ function renderStoreOrdersList(orders) {
     return;
   }
 
-  if (summaryEl) {
-    summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
-  }
+  if (summaryEl) { summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate); }
 
   listDiv.innerHTML = orders.map(o => {
     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
     const calc = calculateOrderCommission(o, rate);
-    const discountNote = calc.discount > 0
-      ? ` | خصم: <b>${money(calc.discount)}</b> (${getBearerLabel(calc.bearer)})`
-      : "";
+    const discountNote = calc.discount > 0 ? ` | خصم: <b>${money(calc.discount)}</b> (${getBearerLabel(calc.bearer)})` : "";
     const commText = calc.isCanceled
       ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
       : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b>${discountNote} | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
@@ -1475,18 +1461,12 @@ function subscribeOrdersRealtime() {
 
   ordersRealtimeChannel = supabaseClient
     .channel("wassal-orders-realtime")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "orders" },
-      (payload) => {
-        if (!document.getElementById("admin").classList.contains("show")) return;
-        triggerInstantNotification(payload, "admin");
-        clearTimeout(realtimeRefreshTimer);
-        realtimeRefreshTimer = setTimeout(() => {
-          fetchOrdersFromSupabase(true);
-        }, 250);
-      }
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+      if (!document.getElementById("admin").classList.contains("show")) return;
+      triggerInstantNotification(payload, "admin");
+      clearTimeout(realtimeRefreshTimer);
+      realtimeRefreshTimer = setTimeout(() => { fetchOrdersFromSupabase(true); }, 250);
+    })
     .subscribe((status) => {
       if (status === "SUBSCRIBED") {
         setRealtimeBadge("🟢 مباشر (Realtime نشط)", true);
@@ -1513,6 +1493,8 @@ function closeAdmin() {
 async function showAdmin(){
  const pin = prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
  if(pin !== "1234") return;
+ document.getElementById("storePanel").classList.remove("show");
+ document.getElementById("courierPanel").classList.remove("show");
  document.getElementById("admin").classList.add("show");
  renderAdminPromoList();
  updateSoundButtons();
@@ -1522,16 +1504,11 @@ async function showAdmin(){
 
 async function ensureStoreNamesLoaded(orders) {
   const missingIds = [...new Set(
-    (orders || [])
-      .map(o => o.store_id)
-      .filter(id => id && !storeNameCache[id])
+    (orders || []).map(o => o.store_id).filter(id => id && !storeNameCache[id])
   )];
   if (!missingIds.length) return;
   try {
-    const { data, error } = await supabaseClient
-      .from('stores')
-      .select('id, name')
-      .in('id', missingIds);
+    const { data, error } = await supabaseClient.from('stores').select('id, name').in('id', missingIds);
     if (!error && Array.isArray(data)) {
       data.forEach(s => { storeNameCache[s.id] = s.name; });
     }
@@ -1551,9 +1528,7 @@ function renderAdminOrdersList(orders) {
     return;
   }
 
-  if (summaryEl) {
-    summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
-  }
+  if (summaryEl) { summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate); }
 
   const filteredOrders = orders.filter(o => {
     if (selectedFilter === "all") return true;
@@ -1572,16 +1547,12 @@ function renderAdminOrdersList(orders) {
       ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
       : "طلب عام";
     const calc = calculateOrderCommission(o, rate);
-    const discountNote = calc.discount > 0
-      ? ` | خصم: <b>${money(calc.discount)}</b> (${getBearerLabel(calc.bearer)})`
-      : "";
+    const discountNote = calc.discount > 0 ? ` | خصم: <b>${money(calc.discount)}</b> (${getBearerLabel(calc.bearer)})` : "";
     const commText = calc.isCanceled
       ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
       : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b>${discountNote} | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
     const courier = getOrderCourier(o);
-    const courierSummary = courier.name
-      ? `المندوب: <b>${courier.name}</b>${courier.phone ? ` (${courier.phone})` : ""}`
-      : `لم يُسند مندوب بعد`;
+    const courierSummary = courier.name ? `المندوب: <b>${courier.name}</b>${courier.phone ? ` (${courier.phone})` : ""}` : `لم يُسند مندوب بعد`;
 
     return `<div class="order">
       <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
@@ -1622,13 +1593,10 @@ async function fetchOrdersFromSupabase(silent = false){
      .order('created_at', { ascending: false });
 
    if (error) throw error;
-
    await ensureStoreNamesLoaded(orders);
 
    const syncEl = document.getElementById("lastSyncText");
-   if (syncEl) {
-     syncEl.textContent = "آخر مزامنة: " + new Date().toLocaleTimeString("ar-EG");
-   }
+   if (syncEl) { syncEl.textContent = "آخر مزامنة: " + new Date().toLocaleTimeString("ar-EG"); }
 
    lastAdminOrders = orders || [];
    populateCourierSuggestions(lastAdminOrders);
@@ -1643,18 +1611,10 @@ async function updateOrderStatus(orderId, newStatus) {
     const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) throw error;
     alert("تم التحديث بنجاح! ✅");
-    if (document.getElementById("admin").classList.contains("show")) {
-      fetchOrdersFromSupabase(true);
-    }
-    if (document.getElementById("storePanel").classList.contains("show")) {
-      fetchStoreOwnerOrders(true);
-    }
-    if (document.getElementById("courierPanel").classList.contains("show")) {
-      fetchCourierOrders(true);
-    }
-  } catch (err) {
-    alert("خطأ: " + err.message);
-  }
+    if (document.getElementById("admin").classList.contains("show")) { fetchOrdersFromSupabase(true); }
+    if (document.getElementById("storePanel").classList.contains("show")) { fetchStoreOwnerOrders(true); }
+    if (document.getElementById("courierPanel").classList.contains("show")) { fetchCourierOrders(true); }
+  } catch (err) { alert("خطأ: " + err.message); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1665,9 +1625,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminPromoList();
   try {
     const savedTrack = localStorage.getItem(TRACK_ORDER_KEY) || "";
-    if (savedTrack) {
-      trackOrderByNumber(savedTrack, true);
-    }
+    if (savedTrack) { trackOrderByNumber(savedTrack, true); }
   } catch (_) {}
 });
 
