@@ -64,7 +64,11 @@
 .track-step{border:1px solid var(--line);background:#f8faf9;border-radius:12px;padding:10px;font-size:12px;color:var(--muted)}
 .track-step.done{border-color:#86efac;background:#f0fdf4;color:#166534;font-weight:700}
 .track-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fcfdfb;font-size:13px}
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+.promo-admin-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:14px}
+.promo-admin-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.promo-admin-grid input,.promo-admin-grid select{border:1px solid #dce4de;border-radius:8px;padding:8px;background:#fff;font-size:12px}
+.promo-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -114,7 +118,7 @@
 
  <section class="panel courier-panel" id="courierPanel">
   <div class="drawer-head">
-    <h3>لوحة المندوب (متابعة التوصيل: جاري التوصيل ← تم التوصيل)[cite: 2]</h3>
+    <h3>لوحة المندوب (متابعة التوصيل: جاري التوصيل ← تم التوصيل)</h3>
     <button class="close" onclick="closeCourierPanel()">×</button>
   </div>
   <div class="admin-bar">
@@ -164,6 +168,24 @@
     <h3>لوحة تحكم وصّال (مركز الطلبات والعمولات والتوصيل)</h3>
     <button class="close" onclick="closeAdmin()">×</button>
   </div>
+  <div class="promo-admin-box">
+    <b>🎟️ إدارة أكواد الخصم والجهة المتحملة</b>
+    <div class="promo-admin-grid">
+      <input id="newPromoCode" placeholder="رمز الكود (مثل WASSAL15)">
+      <select id="newPromoType">
+        <option value="percent">نسبة مئوية (%)</option>
+        <option value="fixed">مبلغ ثابت (ج.م)</option>
+      </select>
+      <input id="newPromoValue" type="number" min="1" step="0.5" placeholder="القيمة (مثلاً 10 أو 20)">
+      <select id="newPromoBearer">
+        <option value="platform">يتحمّله الموقع</option>
+        <option value="store">يتحمّله المتجر</option>
+        <option value="split">مناصفة (50% / 50%)</option>
+      </select>
+      <button type="button" onclick="savePromoRule()" style="background:var(--green);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">حفظ الكود</button>
+    </div>
+    <div id="adminPromoList"></div>
+  </div>
   <div class="admin-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="realtimeStatus" class="rt-pill">⏳ وضع التحديث اللحظي في الانتظار</span>
@@ -203,7 +225,7 @@
  <div id="storeContextBox"></div>
  <div id="cartItems"></div>
  <div class="promo-box">
-  <label for="promoCodeInput" style="font-size:12px;font-weight:700">🎟️ كود الخصم (متاح: WASSAL10 أو WELCOME20)</label>
+  <label for="promoCodeInput" style="font-size:12px;font-weight:700">🎟️ كود الخصم</label>
   <div class="promo-row">
    <input id="promoCodeInput" placeholder="أدخل كود الخصم" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode()}">
    <button type="button" onclick="applyPromoCode()" style="background:var(--green2);color:#fff;padding:8px 12px;border-radius:9px;font-weight:700">تطبيق</button>
@@ -231,10 +253,130 @@ const DISPATCH_STORAGE_KEY = "wassal_dispatch_v1";
 const COURIER_ACTIVE_KEY = "wassal_active_courier_v1";
 const TRACK_ORDER_KEY = "wassal_last_track_order_v1";
 const PROMO_STORAGE_KEY = "wassal_promo_code_v1";
-const PROMO_CODES = {
-  WASSAL10: { type: "percent", value: 10, label: "خصم 10% على المنتجات" },
-  WELCOME20: { type: "fixed", value: 20, label: "خصم 20 ج.م على الطلب" }
+const PROMO_RULES_KEY = "wassal_promo_rules_v1";
+
+const DEFAULT_PROMO_RULES = {
+  WASSAL10: { type: "percent", value: 10, bearer: "platform", active: true },
+  WELCOME20: { type: "fixed", value: 20, bearer: "platform", active: true }
 };
+
+function loadPromoRules() {
+  try {
+    const raw = localStorage.getItem(PROMO_RULES_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === "object" && Object.keys(parsed).length) {
+      return parsed;
+    }
+  } catch (_) {}
+  return { ...DEFAULT_PROMO_RULES };
+}
+
+function savePromoRules(rulesObj) {
+  try {
+    localStorage.setItem(PROMO_RULES_KEY, JSON.stringify(rulesObj));
+  } catch (_) {}
+}
+
+let promoRules = loadPromoRules();
+
+function getBearerLabel(bearer) {
+  if (bearer === "store") return "يتحمّله المتجر";
+  if (bearer === "split") return "مناصفة (50% المتجر / 50% الموقع)";
+  return "يتحمّله الموقع";
+}
+
+function formatPromoRuleLabel(code, rule) {
+  if (!rule) return code;
+  const valLabel = rule.type === "percent" ? `خصم ${rule.value}%` : `خصم ${rule.value} ج.م`;
+  return `${valLabel} — ${getBearerLabel(rule.bearer)}`;
+}
+
+function renderAdminPromoList() {
+  const listEl = document.getElementById("adminPromoList");
+  if (!listEl) return;
+  const entries = Object.entries(promoRules || {});
+  if (!entries.length) {
+    listEl.innerHTML = "<p class='muted'>لا توجد أكواد خصم معرفة حالياً.</p>";
+    return;
+  }
+
+  listEl.innerHTML = entries.map(([code, rule]) => {
+    const isActive = rule.active !== false;
+    return `
+      <div class="promo-item">
+        <div>
+          <b>${code}</b> — ${formatPromoRuleLabel(code, rule)}
+          <span class="badge ${isActive ? 'delivered' : ''}" style="margin-right:6px">${isActive ? 'نشط' : 'معطّل'}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" onclick="togglePromoRuleActive('${code}')" style="background:#e2e8f0;color:#0f172a;padding:4px 9px;border-radius:6px;font-weight:700">${isActive ? 'تعطيل' : 'تفعيل'}</button>
+          <button type="button" onclick="deletePromoRule('${code}')" style="background:#fee2e2;color:#991b1b;padding:4px 9px;border-radius:6px;font-weight:700">حذف</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function savePromoRule() {
+  const codeEl = document.getElementById("newPromoCode");
+  const typeEl = document.getElementById("newPromoType");
+  const valEl = document.getElementById("newPromoValue");
+  const bearerEl = document.getElementById("newPromoBearer");
+
+  const code = String(codeEl ? codeEl.value : "").trim().toUpperCase();
+  const type = typeEl ? typeEl.value : "percent";
+  const value = Number(valEl ? valEl.value : 0);
+  const bearer = bearerEl ? bearerEl.value : "platform";
+
+  if (!code) {
+    alert("أدخل رمز كود الخصم أولاً.");
+    return;
+  }
+  if (!value || value <= 0) {
+    alert("أدخل قيمة خصم صحيحة أكبر من صفر.");
+    return;
+  }
+  if (type === "percent" && value > 100) {
+    alert("نسبة الخصم لا يمكن أن تتجاوز 100%.");
+    return;
+  }
+
+  promoRules[code] = { type, value, bearer, active: true };
+  savePromoRules(promoRules);
+  if (codeEl) codeEl.value = "";
+  if (valEl) valEl.value = "";
+  renderAdminPromoList();
+  updateCart();
+  recalculateVisiblePanels();
+  alert("تم حفظ كود الخصم ✅");
+}
+
+function togglePromoRuleActive(code) {
+  if (!promoRules[code]) return;
+  promoRules[code].active = promoRules[code].active === false;
+  if (promoRules[code].active === false && activePromoCode === code) {
+    activePromoCode = "";
+    savePromoCode("");
+  }
+  savePromoRules(promoRules);
+  renderAdminPromoList();
+  updateCart();
+  recalculateVisiblePanels();
+}
+
+function deletePromoRule(code) {
+  if (!promoRules[code]) return;
+  delete promoRules[code];
+  if (activePromoCode === code) {
+    activePromoCode = "";
+    savePromoCode("");
+  }
+  savePromoRules(promoRules);
+  renderAdminPromoList();
+  updateCart();
+  recalculateVisiblePanels();
+}
+
 const storeNameCache = {};
 let allStoresList = [];
 let lastStoreOrders = [];
@@ -372,7 +514,8 @@ function saveCart(items) {
 function loadSavedPromoCode() {
   try {
     const raw = String(localStorage.getItem(PROMO_STORAGE_KEY) || "").trim().toUpperCase();
-    return PROMO_CODES[raw] ? raw : "";
+    const r = promoRules[raw];
+    return r && r.active !== false ? raw : "";
   } catch (_) {
     return "";
   }
@@ -389,7 +532,9 @@ let activePromoCode = loadSavedPromoCode();
 
 function calculateCartTotals() {
   const subtotal = cartItems.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
-  const promo = activePromoCode ? PROMO_CODES[activePromoCode] : null;
+  const promo = activePromoCode && promoRules[activePromoCode] && promoRules[activePromoCode].active !== false
+    ? promoRules[activePromoCode]
+    : null;
   let discount = 0;
 
   if (subtotal > 0 && promo) {
@@ -415,16 +560,17 @@ function applyPromoCode() {
   const input = document.getElementById("promoCodeInput");
   const code = String(input ? input.value : "").trim().toUpperCase();
   if (!code) {
-    setPromoMessage("أدخل كود خصم أولاً مثل WASSAL10 أو WELCOME20.", true);
+    setPromoMessage("أدخل كود خصم أولاً.", true);
     return;
   }
-  if (!PROMO_CODES[code]) {
-    setPromoMessage("كود الخصم غير صالح. جرّب WASSAL10 أو WELCOME20.", true);
+  const rule = promoRules[code];
+  if (!rule || rule.active === false) {
+    setPromoMessage("كود الخصم غير صالح أو غير نشط حالياً.", true);
     return;
   }
   activePromoCode = code;
   savePromoCode(code);
-  setPromoMessage(`تم تطبيق الكود ${code} (${PROMO_CODES[code].label}) ✅`, false);
+  setPromoMessage(`تم تطبيق الكود ${code} (${formatPromoRuleLabel(code, rule)}) ✅`, false);
   updateCart();
 }
 
@@ -770,27 +916,93 @@ function getCommissionRate(inputId) {
   return val;
 }
 
+function parseOrderPromoFromNotes(order) {
+  const rawSubtotal = Number(order.subtotal ?? order.total ?? 0);
+  const rawTotal = Number(order.total ?? rawSubtotal);
+  const inferredDiscount = Math.max(0, Number((rawSubtotal - rawTotal).toFixed(2)));
+  const notesText = String(order.notes || "");
+
+  let matchedCode = "";
+  const matchCode = notesText.match(/كود خصم:\s*([A-Z0-9_-]+)/i);
+  if (matchCode && matchCode[1]) {
+    matchedCode = matchCode[1].toUpperCase();
+  }
+
+  let bearer = "platform";
+  if (matchedCode && promoRules[matchedCode] && promoRules[matchedCode].bearer) {
+    bearer = promoRules[matchedCode].bearer;
+  } else if (/جهة الخصم:\s*المتجر/i.test(notesText)) {
+    bearer = "store";
+  } else if (/جهة الخصم:\s*مناصفة/i.test(notesText)) {
+    bearer = "split";
+  }
+
+  return {
+    code: matchedCode,
+    discount: inferredDiscount,
+    bearer,
+    baseAmount: rawSubtotal
+  };
+}
+
 function calculateOrderCommission(order, ratePercent) {
   const isCanceled = order.status === "cancelled" || order.status === "canceled";
-  const baseAmount = Number(order.total || 0);
+  const promoInfo = parseOrderPromoFromNotes(order);
+  const baseAmount = promoInfo.baseAmount;
   if (isCanceled || baseAmount <= 0) {
-    return { commission: 0, netStore: 0, isCanceled };
+    return {
+      commission: 0,
+      netStore: 0,
+      discount: 0,
+      storeDiscountShare: 0,
+      platformDiscountShare: 0,
+      bearer: promoInfo.bearer,
+      code: promoInfo.code,
+      isCanceled
+    };
   }
+
   const commission = Number(((baseAmount * ratePercent) / 100).toFixed(2));
-  const netStore = Number(Math.max(0, baseAmount - commission).toFixed(2));
-  return { commission, netStore, isCanceled };
+  const rawNetBeforeDiscount = Math.max(0, baseAmount - commission);
+
+  let storeDiscountShare = 0;
+  let platformDiscountShare = 0;
+
+  if (promoInfo.discount > 0) {
+    if (promoInfo.bearer === "store") {
+      storeDiscountShare = promoInfo.discount;
+    } else if (promoInfo.bearer === "split") {
+      storeDiscountShare = Number((promoInfo.discount * 0.5).toFixed(2));
+      platformDiscountShare = Number((promoInfo.discount - storeDiscountShare).toFixed(2));
+    } else {
+      platformDiscountShare = promoInfo.discount;
+    }
+  }
+
+  const netStore = Number(Math.max(0, rawNetBeforeDiscount - storeDiscountShare).toFixed(2));
+
+  return {
+    commission,
+    netStore,
+    discount: promoInfo.discount,
+    storeDiscountShare,
+    platformDiscountShare,
+    bearer: promoInfo.bearer,
+    code: promoInfo.code,
+    isCanceled
+  };
 }
 
 function buildSettlementSummaryHtml(orders, ratePercent) {
   const activeOrders = (orders || []).filter(o => o.status !== "cancelled" && o.status !== "canceled");
-  const grossSales = activeOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const grossSales = activeOrders.reduce((sum, o) => sum + Number(o.subtotal ?? o.total ?? 0), 0);
   const totalCommission = activeOrders.reduce((sum, o) => sum + calculateOrderCommission(o, ratePercent).commission, 0);
-  const totalNetStore = Math.max(0, grossSales - totalCommission);
+  const totalNetStore = activeOrders.reduce((sum, o) => sum + calculateOrderCommission(o, ratePercent).netStore, 0);
 
   return `
     <div class="settlement-grid">
       <div class="settle-card">
-        <span>إجمالي الطلبات الفعّالة (${activeOrders.length})</span>
+        <span>إجمالي المنتجات الفعّالة (${activeOrders.length})</span>
         <b>${money(grossSales)}</b>
       </div>
       <div class="settle-card">
@@ -999,7 +1211,7 @@ function updateCart(){
   const { subtotal, discount, finalTotal, promo } = calculateCartTotals();
 
   if (promo && discount > 0) {
-    setPromoMessage(`الكود ${activePromoCode} مفعّل (${promo.label})`, false);
+    setPromoMessage(`الكود ${activePromoCode} مفعّل (${formatPromoRuleLabel(activePromoCode, promo)})`, false);
   } else if (!activePromoCode) {
     setPromoMessage("", false);
   }
@@ -1038,11 +1250,11 @@ async function placeOrder(){
  submitBtn.textContent = "جاري إرسال الطلب...";
 
  const orderNum = "WD-" + Date.now().toString().slice(-6);
- const { subtotal, discount, finalTotal } = calculateCartTotals();
+ const { subtotal, discount, finalTotal, promo } = calculateCartTotals();
  const firstStoreId = cartItems.find(item => item.store_id)?.store_id || null;
  const rawNotes = document.getElementById("notes").value.trim();
- const promoNote = discount > 0
-   ? `كود خصم: ${activePromoCode} (خصم ${discount} ج.م من أصل ${subtotal} ج.م)`
+ const promoNote = discount > 0 && promo
+   ? `كود خصم: ${activePromoCode} (خصم ${discount} ج.م من أصل ${subtotal} ج.م | جهة الخصم: ${getBearerLabel(promo.bearer)})`
    : "";
  const mergedNotes = [promoNote, rawNotes].filter(Boolean).join(" | ");
 
@@ -1206,9 +1418,12 @@ function renderStoreOrdersList(orders) {
   listDiv.innerHTML = orders.map(o => {
     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
     const calc = calculateOrderCommission(o, rate);
+    const discountNote = calc.discount > 0
+      ? ` | خصم: <b>${money(calc.discount)}</b> (${getBearerLabel(calc.bearer)})`
+      : "";
     const commText = calc.isCanceled
       ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
-      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b>${discountNote} | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
 
     return `<div class="order">
       <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
@@ -1299,6 +1514,7 @@ async function showAdmin(){
  const pin = prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
  if(pin !== "1234") return;
  document.getElementById("admin").classList.add("show");
+ renderAdminPromoList();
  updateSoundButtons();
  subscribeOrdersRealtime();
  fetchOrdersFromSupabase();
@@ -1356,9 +1572,12 @@ function renderAdminOrdersList(orders) {
       ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
       : "طلب عام";
     const calc = calculateOrderCommission(o, rate);
+    const discountNote = calc.discount > 0
+      ? ` | خصم: <b>${money(calc.discount)}</b> (${getBearerLabel(calc.bearer)})`
+      : "";
     const commText = calc.isCanceled
       ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
-      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b>${discountNote} | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
     const courier = getOrderCourier(o);
     const courierSummary = courier.name
       ? `المندوب: <b>${courier.name}</b>${courier.phone ? ` (${courier.phone})` : ""}`
@@ -1443,6 +1662,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderProducts();
   updateCart();
   updateSoundButtons();
+  renderAdminPromoList();
   try {
     const savedTrack = localStorage.getItem(TRACK_ORDER_KEY) || "";
     if (savedTrack) {
