@@ -18,29 +18,30 @@
 .address{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:7px;border-radius:15px;max-width:560px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}.address select,.address input{border:0;outline:0;padding:9px;background:#fff;color:var(--ink);min-width:120px;flex:1}.address button{background:linear-gradient(135deg,#ffb057,#f49a38);color:#153833;padding:10px 18px;border-radius:11px;font-weight:800}
 .hero-art{display:grid;place-items:center;font-size:104px;opacity:.96;filter:drop-shadow(0 10px 18px rgba(0,0,0,0.22))}
 
-/* واجهة الأيقونات الرئيسية الأكثر حيوية */
+/* أيقونات رئيسية مريحة للعين ومتناسقة مع خلفية وصّال */
 .showcase-gateway{margin:24px 0 16px}
 .gateway-title{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .gateway-title h2{margin:0;font-size:20px;color:var(--green)}
 .gateway-title span{font-size:12px;color:var(--muted)}
 .main-nav-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.nav-tab-btn{position:relative;background:linear-gradient(165deg,#ffffff 0%,#f7faf8 100%);border:2px solid var(--line);border-radius:22px;padding:18px 14px;text-align:center;font-weight:800;font-size:16px;color:var(--ink);transition:all .24s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(18,60,58,0.06);overflow:hidden}
-.nav-tab-btn::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:transparent;transition:background .24s ease}
-.nav-tab-btn:hover{transform:translateY(-4px);border-color:#a8c7bc;box-shadow:0 14px 26px rgba(18,60,58,0.13)}
-.nav-tab-btn span.icon-badge{width:62px;height:62px;border-radius:20px;display:grid;place-items:center;font-size:32px;background:linear-gradient(145deg,#f2f8f5,#e3efe9);box-shadow:inset 0 0 0 1px rgba(18,60,58,0.08),0 5px 12px rgba(18,60,58,0.07);transition:transform .26s cubic-bezier(.22,1,.36,1),background .24s ease}
-.nav-tab-btn:hover span.icon-badge{transform:scale(1.1) rotate(-3deg)}
-.nav-tab-btn.active{border-color:var(--green2);background:linear-gradient(165deg,#e7f6ef 0%,#ffffff 100%);color:var(--green);box-shadow:0 14px 28px rgba(27,98,91,0.2)}
+.nav-tab-btn{position:relative;background:linear-gradient(180deg,#ffffff 0%,#f5f8f6 100%);border:1.5px solid #dce6e1;border-radius:20px;padding:16px 14px;text-align:center;font-weight:800;font-size:15px;color:var(--ink);transition:all .22s ease;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(18,60,58,0.05);overflow:hidden}
+.nav-tab-btn::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:transparent;transition:background .22s ease}
+.nav-tab-btn:hover{transform:translateY(-2px);border-color:#9fc2b7;box-shadow:0 8px 20px rgba(18,60,58,0.09)}
+.nav-tab-btn span.icon-badge{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:#eef5f1;border:1px solid #d9e7e0;box-shadow:0 4px 10px rgba(18,60,58,0.06);transition:transform .22s ease,background .22s ease,border-color .22s ease;overflow:hidden}
+.nav-tab-btn span.icon-badge img{width:54px;height:54px;object-fit:contain;border-radius:12px;filter:saturate(0.88) contrast(0.98);transition:transform .22s ease,filter .22s ease}
+.nav-tab-btn:hover span.icon-badge img{transform:scale(1.05);filter:saturate(0.96)}
+.nav-tab-btn.active{border-color:var(--green2);background:linear-gradient(180deg,#eef8f3 0%,#ffffff 100%);color:var(--green);box-shadow:0 8px 22px rgba(27,98,91,0.13)}
 .nav-tab-btn.active::before{background:linear-gradient(90deg,var(--green2),var(--orange))}
-.nav-tab-btn.active span.icon-badge{background:linear-gradient(135deg,#123c3a,#1f7268);color:#fff;box-shadow:0 8px 18px rgba(18,60,58,0.26);animation:iconPulse 2.4s ease-in-out infinite}
-@keyframes iconPulse{0%,100%{transform:translateY(0) scale(1.04)}50%{transform:translateY(-3px) scale(1.08)}}
+.nav-tab-btn.active span.icon-badge{background:#e3f2eb;border-color:#9fc7b9}
+.nav-tab-btn.active span.icon-badge img{transform:scale(1.04);filter:saturate(0.98)}
 .nav-tab-btn small{font-size:12px;font-weight:400;color:var(--muted)}
 .nav-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#eef4f1;color:var(--green2)}
-.nav-tab-btn.active .nav-pill{background:#fff0da;color:#9a4d00}
+.nav-tab-btn.active .nav-pill{background:#fff2df;color:#8e4700}
 
 /* الحاوية الداخلية للأيقونة المختارة */
-.active-icon-stage{background:#fff;border:1.5px solid #d7e3dd;border-radius:24px;padding:20px;box-shadow:0 10px 26px rgba(18,60,58,0.06)}
-.tab-content-section{display:none}.tab-content-section.active{display:block;animation:fadeInTab .22s ease}
-@keyframes fadeInTab{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.active-icon-stage{background:#fff;border:1.5px solid #d7e3dd;border-radius:24px;padding:20px;box-shadow:0 8px 22px rgba(18,60,58,0.05)}
+.tab-content-section{display:none}.tab-content-section.active{display:block;animation:fadeInTab .2s ease}
+@keyframes fadeInTab{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .section-head{display:flex;justify-content:space-between;align-items:end;margin:0 0 16px;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}.section-head h2{font-size:20px;margin:0;color:var(--green)}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
 
 .products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:212px;transition:transform .18s ease,box-shadow .18s ease}.product:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(18,60,58,0.08)}.pic{height:88px;border-radius:14px;background:#f2f6f4;display:grid;place-items:center;font-size:43px;margin-bottom:12px;overflow:hidden}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted);line-height:1.5}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px;gap:8px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700;transition:background .18s ease}.add:hover{background:var(--green2)}
@@ -100,7 +101,7 @@
 .promo-admin-grid input,.promo-admin-grid select{border:1px solid #dce4de;border-radius:8px;padding:8px;background:#fff;font-size:12px}
 .promo-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px}
 
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:1fr;gap:10px}.nav-tab-btn{flex-direction:row;text-align:right;padding:14px 16px}.nav-tab-btn span.icon-badge{width:52px;height:52px;font-size:27px;flex-shrink:0}.nav-tab-btn div.tab-meta{flex:1}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:1fr;gap:10px}.nav-tab-btn{flex-direction:row;text-align:right;padding:13px 14px}.nav-tab-btn span.icon-badge{width:54px;height:54px;flex-shrink:0}.nav-tab-btn span.icon-badge img{width:46px;height:46px}.nav-tab-btn div.tab-meta{flex:1}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -127,7 +128,7 @@
   <div class="hero-art">🛵</div>
  </section>
 
- <!-- بوابة الأيقونات الرئيسية الفخمة والحيوية -->
+ <!-- بوابة الأيقونات الرئيسية المتناسقة والمريحة للعين -->
  <section class="showcase-gateway" id="gatewaySection">
   <div class="gateway-title">
     <h2>اختر وجهتك الرئيسية</h2>
@@ -135,7 +136,9 @@
   </div>
   <nav class="main-nav-tabs">
     <button class="nav-tab-btn active" id="tabBtnStores" onclick="switchMainTab('stores')">
-      <span class="icon-badge">🏪</span>
+      <span class="icon-badge">
+        <img src="store-3d.png" alt="المتاجر" onerror="this.outerHTML='🏪'">
+      </span>
       <div class="tab-meta">
         <div>المتاجر</div>
         <small>سوبر ماركت، مخبز، صيدلية...</small>
@@ -143,7 +146,9 @@
       <span class="nav-pill" id="countBadgeStores">المتاجر</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnRestaurants" onclick="switchMainTab('restaurants')">
-      <span class="icon-badge">🍽️</span>
+      <span class="icon-badge">
+        <img src="restaurant-3d.png" alt="المطاعم" onerror="this.outerHTML='🍽️'">
+      </span>
       <div class="tab-meta">
         <div>المطاعم</div>
         <small>الشف دسوق ومأكولات جاهزة</small>
@@ -151,7 +156,9 @@
       <span class="nav-pill" id="countBadgeRestaurants">المطاعم</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnProducts" onclick="switchMainTab('products')">
-      <span class="icon-badge">🛍️</span>
+      <span class="icon-badge">
+        <img src="products-3d.png" alt="المنتجات العامة" onerror="this.outerHTML='🛍️'">
+      </span>
       <div class="tab-meta">
         <div>المنتجات العامة</div>
         <small>جميع المنتجات المعروضة</small>
