@@ -35,6 +35,9 @@
 .comm-line{margin-top:6px;padding-top:6px;border-top:1px dashed #e1e8e4;font-size:12px;color:#334155}
 .dispatch-box{margin-top:8px;padding:8px 10px;background:#f4f8f6;border-radius:10px;font-size:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .dispatch-box input{padding:5px 8px;border:1px solid #cfd9d4;border-radius:7px;font-size:12px;min-width:125px}
+.alert-banner{display:none;background:#fff8eb;border:1px solid #f4cf8a;color:#5c3c00;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12px;font-weight:700;align-items:center;justify-content:space-between;gap:10px}
+.alert-banner.show{display:flex}
+.notif-btn{background:#edf4f0;color:var(--green);padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700}
 .field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}
 .admin,.store-panel{display:none}.admin.show,.store-panel.show{display:block}
 .order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px;background:#fcfdfb}
@@ -76,7 +79,7 @@
  
  <section class="panel">
   <h3>للمتاجر والمندوبين والإدارة</h3>
-  <p class="muted">يتم إدارة العمليات واستقبال الطلبات والتسويات والتوصيل من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
+  <p class="muted">يتم إدارة العمليات واستقبال الطلبات والتسويات والتوصيل والإشعارات الفورية من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
     <button class="add" onclick="showStoreOwnerPanel()" style="background:var(--green2)">🏪 لوحة تحكم المتجر</button>
     <button class="add" onclick="showAdmin()">🛡️ لوحة التحكم الإدارية</button>
@@ -97,8 +100,14 @@
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="storeRealtimeStatus" class="rt-pill">⏳ البث اللحظي للطلبات</span>
+      <button class="notif-btn" id="storeSoundBtn" onclick="toggleSoundAlert()">🔔 الصوت: مفعل</button>
+      <button class="notif-btn" id="storeBrowserNotifBtn" onclick="requestBrowserNotificationPermission()">🌐 إشعارات المتصفح</button>
       <button onclick="fetchStoreOwnerOrders()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث</button>
     </div>
+  </div>
+  <div class="alert-banner" id="storeAlertBanner">
+    <span id="storeAlertText"></span>
+    <button onclick="hideAlertBanner('storeAlertBanner')" style="background:transparent;color:#5c3c00;font-weight:800">×</button>
   </div>
   <div id="storeSettlementSummary"></div>
   <div id="storeOrdersList"><p class="muted">اختر المتجر لعرض الطلبات الخاصة به...</p></div>
@@ -124,9 +133,15 @@
       <input id="adminCommissionRate" type="number" min="0" max="100" step="0.5" value="10" onchange="recalculateVisiblePanels()" style="width:72px;padding:6px;border-radius:8px;border:1px solid #ccc">
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button class="notif-btn" id="adminSoundBtn" onclick="toggleSoundAlert()">🔔 الصوت: مفعل</button>
+      <button class="notif-btn" id="adminBrowserNotifBtn" onclick="requestBrowserNotificationPermission()">🌐 إشعارات المتصفح</button>
       <span id="lastSyncText" class="muted">آخر مزامنة: —</span>
       <button onclick="fetchOrdersFromSupabase()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث الآن</button>
     </div>
+  </div>
+  <div class="alert-banner" id="adminAlertBanner">
+    <span id="adminAlertText"></span>
+    <button onclick="hideAlertBanner('adminAlertBanner')" style="background:transparent;color:#5c3c00;font-weight:800">×</button>
   </div>
   <div id="adminSettlementSummary"></div>
   <div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div>
@@ -165,6 +180,7 @@ let lastAdminOrders = [];
 let ordersRealtimeChannel = null;
 let storeRealtimeChannel = null;
 let realtimeRefreshTimer = null;
+let soundAlertEnabled = true;
 
 const catalog=[
  {id:1,name:"طماطم طازجة",cat:"خضراوات",price:18,unit:"للكيلو",emoji:"🍅"},
@@ -180,6 +196,97 @@ const catalog=[
  {id:11,name:"مسحوق غسيل",cat:"مستلزمات منزلية",price:85,unit:"للعبوة",emoji:"🧼"},
  {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"}
 ];
+
+function playAlertTone() {
+  if (!soundAlertEnabled) return;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(780, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.16);
+    setTimeout(() => ctx.close().catch(() => {}), 250);
+  } catch (_) {}
+}
+
+function updateSoundButtons() {
+  const text = soundAlertEnabled ? "🔔 الصوت: مفعل" : "🔕 الصوت: مكتوم";
+  ["storeSoundBtn", "adminSoundBtn"].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.textContent = text;
+  });
+}
+
+function toggleSoundAlert() {
+  soundAlertEnabled = !soundAlertEnabled;
+  updateSoundButtons();
+  if (soundAlertEnabled) playAlertTone();
+}
+
+async function requestBrowserNotificationPermission() {
+  if (!("Notification" in window)) {
+    alert("متصفحك لا يدعم إشعارات سطح المكتب.");
+    return;
+  }
+  if (Notification.permission === "granted") {
+    alert("إشعارات المتصفح مفعّلة بالفعل ✅");
+    return;
+  }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === "granted") {
+      new Notification("وصّال دسوق", { body: "تم تفعيل الإشعارات الفورية للطلبات." });
+    } else {
+      alert("لم يتم منح إذن إشعارات المتصفح.");
+    }
+  } catch (_) {}
+}
+
+function showAlertBanner(bannerId, textId, message) {
+  const banner = document.getElementById(bannerId);
+  const textEl = document.getElementById(textId);
+  if (!banner || !textEl) return;
+  textEl.textContent = message;
+  banner.classList.add("show");
+}
+
+function hideAlertBanner(bannerId) {
+  const banner = document.getElementById(bannerId);
+  if (banner) banner.classList.remove("show");
+}
+
+function triggerInstantNotification(payload, panelType) {
+  const eventType = payload?.eventType || "";
+  const rec = payload?.new || payload?.old || {};
+  const orderRef = rec.order_number || (rec.id ? `#${rec.id}` : "طلب");
+  const label = eventType === "INSERT"
+    ? `🔔 طلب جديد وارد (${orderRef}) — تم تحديث القائمة لحظياً`
+    : eventType === "UPDATE"
+      ? `🔄 تحديث حالة الطلب (${orderRef}) — تم تحديث القائمة لحظياً`
+      : `⚡ تحديث فوري على الطلبات (${orderRef})`;
+
+  if (panelType === "admin" && document.getElementById("admin").classList.contains("show")) {
+    showAlertBanner("adminAlertBanner", "adminAlertText", label);
+  }
+  if (panelType === "store" && document.getElementById("storePanel").classList.contains("show")) {
+    showAlertBanner("storeAlertBanner", "storeAlertText", label);
+  }
+
+  playAlertTone();
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification("وصّال دسوق", { body: label });
+    } catch (_) {}
+  }
+}
 
 function loadCart() {
   try {
@@ -607,6 +714,7 @@ function setRealtimeBadge(stateText, isLive = false, targetId = "realtimeStatus"
 function showStoreOwnerPanel() {
   const panel = document.getElementById("storePanel");
   panel.classList.add("show");
+  updateSoundButtons();
   const select = document.getElementById("storeOwnerSelect");
   if (allStoresList.length) {
     select.innerHTML = allStoresList.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
@@ -642,8 +750,9 @@ function subscribeStoreRealtime() {
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "orders" },
-      () => {
+      (payload) => {
         if (!document.getElementById("storePanel").classList.contains("show")) return;
+        triggerInstantNotification(payload, "store");
         fetchStoreOwnerOrders(true);
       }
     )
@@ -731,8 +840,9 @@ function subscribeOrdersRealtime() {
     .on(
       "postgres_changes",
       { event: "*", schema: "public", table: "orders" },
-      () => {
+      (payload) => {
         if (!document.getElementById("admin").classList.contains("show")) return;
+        triggerInstantNotification(payload, "admin");
         clearTimeout(realtimeRefreshTimer);
         realtimeRefreshTimer = setTimeout(() => {
           fetchOrdersFromSupabase(true);
@@ -766,6 +876,7 @@ async function showAdmin(){
  const pin = prompt("أدخل كلمة مرور لوحة تحكم الإدارة (الرمز الافتراضي: 1234)");
  if(pin !== "1234") return;
  document.getElementById("admin").classList.add("show");
+ updateSoundButtons();
  subscribeOrdersRealtime();
  fetchOrdersFromSupabase();
 }
@@ -904,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchStores();
   renderProducts();
   updateCart();
+  updateSoundButtons();
 });
 
 document.querySelector(".brand").style.cursor = "pointer";
