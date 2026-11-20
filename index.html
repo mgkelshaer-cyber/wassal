@@ -1070,28 +1070,44 @@ function recalculateVisiblePanels() {
   }
 }
 
+function isStoreOpenStatus(status) {
+  const s = String(status || "open").trim().toLowerCase();
+  return s === "open" || s === "مفتوح" || s === "active";
+}
+
+function hasClosedStoreInCart() {
+  return cartItems.some(item => {
+    if (!item.store_id || String(item.store_id).startsWith("chef-")) return false;
+    const foundStore = allStoresList.find(s => String(s.id) === String(item.store_id));
+    return foundStore ? !isStoreOpenStatus(foundStore.status) : false;
+  });
+}
+
 function getCartStoreInfo() {
   if (!cartItems.length) {
-    return { label: "لا توجد عناصر بعد", hasMixedSources: false, storeId: null };
+    return { label: "لا توجد عناصر بعد", hasMixedSources: false, hasClosedStore: false, storeId: null };
   }
   const storeIds = cartItems.map(item => item.store_id || null);
   const uniqueNonNull = [...new Set(storeIds.filter(Boolean))];
   const hasNull = storeIds.some(id => !id);
+  const closedStore = hasClosedStoreInCart();
 
   if (uniqueNonNull.length === 1 && !hasNull) {
     const sid = uniqueNonNull[0];
     return {
       label: storeNameCache[sid] ? `متجر: ${storeNameCache[sid]}` : `متجر محدد (معرّف: ${sid})`,
       hasMixedSources: false,
+      hasClosedStore: closedStore,
       storeId: sid
     };
   }
   if (uniqueNonNull.length === 0 && hasNull) {
-    return { label: "منتجات عامة (طلب سريع)", hasMixedSources: false, storeId: null };
+    return { label: "منتجات عامة (طلب سريع)", hasMixedSources: false, hasClosedStore: false, storeId: null };
   }
   return {
     label: "عناصر من أكثر من مصدر أو متجر",
     hasMixedSources: true,
+    hasClosedStore: closedStore,
     storeId: uniqueNonNull[0] || null
   };
 }
@@ -1113,7 +1129,11 @@ async function resolveStoreNamesForCart() {
   } catch (_) {}
 }
 
-function addRestaurantQuickItem(name, price, emoji, storeRef) {
+function addRestaurantQuickItem(name, price, emoji, storeRef, isOpen = true) {
+  if (!isOpen) {
+    alert("هذا المطعم مغلق حالياً ولا يستقبل طلبات جديدة.");
+    return;
+  }
   const key = `rest_${name}`;
   const existing = cartItems.find(x => x.key === key);
   if (existing) {
@@ -1145,25 +1165,28 @@ function renderFeaturedRestaurants(dbRestaurants) {
       <small>التصنيف: مطاعم — مأكولات ووجبات طازجة</small>
       <div class="price-row">
         <span style="font-size: 12px; font-weight: bold; color: #137333;">مفتوح 🟢</span>
-        <button class="add" onclick="addRestaurantQuickItem('وجبة الشف دسوق', 115, '👨‍🍳', 'chef-dessouk')">+ اطلب وجبة</button>
+        <button class="add" onclick="addRestaurantQuickItem('وجبة الشف دسوق', 115, '👨‍🍳', 'chef-dessouk', true)">+ اطلب وجبة</button>
       </div>
     </article>
   `;
 
-  const renderDbRestaurant = store => `
-    <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
-      <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
-        ${!store.image_url ? '🍽️' : ''}
-      </div>
-      <h3>${store.name}</h3>
-      <small>التصنيف: ${store.category || 'مطاعم'}</small>
-      <div class="price-row">
-        <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
-          ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
-        </span>
-      </div>
-    </article>
-  `;
+  const renderDbRestaurant = store => {
+    const open = isStoreOpenStatus(store.status);
+    return `
+      <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
+        <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
+          ${!store.image_url ? '🍽️' : ''}
+        </div>
+        <h3>${store.name}</h3>
+        <small>التصنيف: ${store.category || 'مطاعم'}</small>
+        <div class="price-row">
+          <span style="font-size: 12px; font-weight: bold; color: ${open ? '#137333' : '#c5221f'};">
+            ${open ? 'مفتوح 🟢' : 'مغلق 🔴'}
+          </span>
+        </div>
+      </article>
+    `;
+  };
 
   const extraCards = (dbRestaurants || []).map(renderDbRestaurant).join("");
   restContainer.innerHTML = chefCard + extraCards;
@@ -1193,20 +1216,23 @@ async function fetchStores() {
     const generalStores = allStoresList.filter(s => !isRestaurantCat(s.category));
     const restaurantStores = allStoresList.filter(s => isRestaurantCat(s.category));
 
-    const renderStoreCard = store => `
-      <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
-        <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
-          ${!store.image_url ? '🏪' : ''}
-        </div>
-        <h3>${store.name}</h3>
-        <small>التصنيف: ${store.category || 'متجر'}</small>
-        <div class="price-row">
-          <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
-            ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
-          </span>
-        </div>
-      </article>
-    `;
+    const renderStoreCard = store => {
+      const open = isStoreOpenStatus(store.status);
+      return `
+        <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
+          <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
+            ${!store.image_url ? '🏪' : ''}
+          </div>
+          <h3>${store.name}</h3>
+          <small>التصنيف: ${store.category || 'متجر'}</small>
+          <div class="price-row">
+            <span style="font-size: 12px; font-weight: bold; color: ${open ? '#137333' : '#c5221f'};">
+              ${open ? 'مفتوح 🟢' : 'مغلق 🔴'}
+            </span>
+          </div>
+        </article>
+      `;
+    };
 
     container.innerHTML = generalStores.length
       ? generalStores.map(renderStoreCard).join("")
@@ -1312,6 +1338,7 @@ function updateCart(){
   contextBox.innerHTML = `
     <div class="store-box">
       <b>جهة الطلب:</b> ${storeInfo.label}
+      ${storeInfo.hasClosedStore ? `<div class="warn-box">تنبيه: أحد المتاجر الموجودة في السلة مغلق حالياً؛ لا يمكن إرسال الطلب حتى يتم إزالة عناصره أو اختيار متجر مفتوح.</div>` : ""}
       ${storeInfo.hasMixedSources ? `<div class="warn-box">تنبيه: السلة تجمع عناصر من أكثر من مصدر/متجر؛ يُفضّل إرسال كل طلب من متجر واحد لتسهيل التجهيز والتوصيل.</div>` : ""}
     </div>
   `;
@@ -1363,6 +1390,7 @@ function closeCart(){document.getElementById("overlay").classList.remove("show")
 
 async function placeOrder(){
  if(!totalCount()){alert("أضف منتجاً واحداً على الأقل إلى السلة.");return}
+ if(hasClosedStoreInCart()){alert("أحد المتاجر الموجودة في السلة مغلق حالياً. يرجى إزالة عناصره أو اختيار متجر مفتوح.");return}
  const name = document.getElementById("customerName").value.trim();
  const phone = document.getElementById("customerPhone").value.trim();
  const address = document.getElementById("customerAddress").value.trim();
