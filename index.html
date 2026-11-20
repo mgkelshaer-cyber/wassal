@@ -7,39 +7,53 @@
 <title>وصّال دسوق | طلباتك لحد باب بيتك</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--green:#123c3a;--green2:#1b625b;--orange:#f49a38;--cream:#f7f8f5;--ink:#1d2927;--muted:#71807b;--line:#e5eae6;--white:#fff}
+:root{--green:#123c3a;--green2:#1b625b;--orange:#f49a38;--gold:#ffd49c;--cream:#f5f7f4;--ink:#1b2826;--muted:#677671;--line:#e2e8e4;--white:#fff}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:Tahoma,Arial,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}
-.top{background:var(--green);color:white;padding:14px max(18px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px}.logo{width:42px;height:42px;border-radius:14px;background:var(--orange);display:grid;place-items:center;color:var(--green);font-size:24px}
-.top small{display:block;color:#d6e4df;font-size:11px;font-weight:400;margin-top:3px}.top button{background:#fff;color:var(--green);padding:10px 14px;border-radius:12px;font-weight:700}
-.wrap{max-width:1120px;margin:auto;padding:20px 16px 70px}
-.hero{background:linear-gradient(120deg,#123c3a,#236c62);color:#fff;border-radius:24px;padding:24px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;overflow:hidden;position:relative}
-.hero h1{font-size:clamp(24px,3.5vw,36px);line-height:1.3;margin:5px 0 10px}.hero p{color:#dcebe6;line-height:1.8;margin:0 0 16px;font-size:14px}.hero .tag{color:#ffd49c;font-size:13px;font-weight:700}
-.address{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:7px;border-radius:14px;max-width:560px}.address select,.address input{border:0;outline:0;padding:9px;background:#fff;color:var(--ink);min-width:120px;flex:1}.address button{background:var(--orange);color:#173d38;padding:10px 16px;border-radius:10px;font-weight:800}
-.hero-art{display:grid;place-items:center;font-size:100px;opacity:.95}
+.top{background:linear-gradient(90deg,#0f3331,#164b47);color:white;padding:14px max(18px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 16px rgba(15,51,49,0.14)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#ffb35c,#f49a38);display:grid;place-items:center;color:var(--green);font-size:24px;box-shadow:0 4px 12px rgba(244,154,56,0.35)}
+.top small{display:block;color:#d6e4df;font-size:11px;font-weight:400;margin-top:3px}.top button{background:#fff;color:var(--green);padding:10px 15px;border-radius:12px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,0.08);transition:transform .18s ease}.top button:hover{transform:translateY(-1px)}
+.wrap{max-width:1120px;margin:auto;padding:20px 16px 80px}
+.hero{background:linear-gradient(125deg,#0f3532 0%,#18554e 58%,#226e63 100%);color:#fff;border-radius:26px;padding:26px;display:grid;grid-template-columns:1.5fr 1fr;gap:20px;overflow:hidden;position:relative;box-shadow:0 12px 30px rgba(18,60,58,0.16)}
+.hero h1{font-size:clamp(24px,3.6vw,38px);line-height:1.3;margin:6px 0 10px}.hero p{color:#dcebe6;line-height:1.8;margin:0 0 16px;font-size:14px}.hero .tag{display:inline-block;background:rgba(255,255,255,0.12);padding:5px 12px;border-radius:999px;color:var(--gold);font-size:12px;font-weight:700}
+.address{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:7px;border-radius:15px;max-width:560px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}.address select,.address input{border:0;outline:0;padding:9px;background:#fff;color:var(--ink);min-width:120px;flex:1}.address button{background:linear-gradient(135deg,#ffb057,#f49a38);color:#153833;padding:10px 18px;border-radius:11px;font-weight:800}
+.hero-art{display:grid;place-items:center;font-size:104px;opacity:.96;filter:drop-shadow(0 10px 18px rgba(0,0,0,0.22))}
 
-/* الأيقونات الرئيسية والتبويب */
-.main-nav-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 10px}
-.nav-tab-btn{background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;font-weight:800;font-size:15px;color:var(--ink);transition:all .2s ease;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.03)}
-.nav-tab-btn span.icon{font-size:32px;line-height:1}
-.nav-tab-btn.active{border-color:var(--green2);background:#edf6f2;color:var(--green);box-shadow:0 4px 12px rgba(27,98,91,0.12)}
-.nav-tab-btn small{font-size:11px;font-weight:400;color:var(--muted)}
+/* واجهة الأيقونات الرئيسية الفخمة */
+.showcase-gateway{margin:24px 0 16px}
+.gateway-title{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.gateway-title h2{margin:0;font-size:20px;color:var(--green)}
+.gateway-title span{font-size:12px;color:var(--muted)}
+.main-nav-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.nav-tab-btn{position:relative;background:linear-gradient(165deg,#ffffff 0%,#f7faf8 100%);border:2px solid var(--line);border-radius:22px;padding:18px 14px;text-align:center;font-weight:800;font-size:16px;color:var(--ink);transition:all .22s ease;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(18,60,58,0.06);overflow:hidden}
+.nav-tab-btn::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:transparent;transition:background .22s ease}
+.nav-tab-btn:hover{transform:translateY(-3px);border-color:#b8cfc7;box-shadow:0 12px 24px rgba(18,60,58,0.11)}
+.nav-tab-btn span.icon-badge{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:#eef5f2;box-shadow:inset 0 0 0 1px rgba(18,60,58,0.08);transition:transform .22s ease,background .22s ease}
+.nav-tab-btn:hover span.icon-badge{transform:scale(1.06)}
+.nav-tab-btn.active{border-color:var(--green2);background:linear-gradient(165deg,#e9f6f0 0%,#ffffff 100%);color:var(--green);box-shadow:0 12px 26px rgba(27,98,91,0.18)}
+.nav-tab-btn.active::before{background:linear-gradient(90deg,var(--green2),var(--orange))}
+.nav-tab-btn.active span.icon-badge{background:linear-gradient(135deg,#123c3a,#1f6e65);color:#fff;box-shadow:0 6px 14px rgba(18,60,58,0.22)}
+.nav-tab-btn small{font-size:12px;font-weight:400;color:var(--muted)}
+.nav-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#f1f5f3;color:var(--green2)}
+.nav-tab-btn.active .nav-pill{background:#fff3e2;color:#9a4d00}
 
-.tab-content-section{display:none}.tab-content-section.active{display:block}
-.section-head{display:flex;justify-content:space-between;align-items:end;margin:20px 0 14px;gap:12px}.section-head h2{font-size:20px;margin:0}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+/* الحاوية الداخلية للأيقونة المختارة */
+.active-icon-stage{background:#fff;border:1.5px solid #d7e3dd;border-radius:24px;padding:20px;box-shadow:0 10px 26px rgba(18,60,58,0.06)}
+.tab-content-section{display:none}.tab-content-section.active{display:block;animation:fadeInTab .2s ease}
+@keyframes fadeInTab{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.section-head{display:flex;justify-content:space-between;align-items:end;margin:0 0 16px;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}.section-head h2{font-size:20px;margin:0;color:var(--green)}.section-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
 
-.products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:205px}.pic{height:82px;border-radius:13px;background:#f2f5f1;display:grid;place-items:center;font-size:43px;margin-bottom:12px}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted)}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700}
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:212px;transition:transform .18s ease,box-shadow .18s ease}.product:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(18,60,58,0.08)}.pic{height:88px;border-radius:14px;background:#f2f6f4;display:grid;place-items:center;font-size:43px;margin-bottom:12px;overflow:hidden}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted);line-height:1.5}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px;gap:8px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700;transition:background .18s ease}.add:hover{background:var(--green2)}
 
-.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:22px}.panel h3{margin:0 0 12px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.step{background:#f6f8f5;border-radius:13px;padding:14px}.step b{display:block;margin-bottom:5px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
+.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:22px;box-shadow:0 4px 14px rgba(18,60,58,0.04)}.panel h3{margin:0 0 12px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.step{background:#f6f8f5;border-radius:13px;padding:14px}.step b{display:block;margin-bottom:5px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
 .footer{background:#102f2d;color:#d8e5e1;text-align:center;padding:22px;font-size:12px}
-.cart-fab{position:fixed;bottom:18px;left:18px;background:var(--orange);color:#173d38;border-radius:50px;padding:14px 19px;font-weight:800;box-shadow:0 8px 25px #0002;z-index:5}
+.cart-fab{position:fixed;bottom:18px;left:18px;background:linear-gradient(135deg,#ffb057,#f49a38);color:#173d38;border-radius:50px;padding:14px 20px;font-weight:800;box-shadow:0 10px 25px rgba(244,154,56,0.35);z-index:5}
 .overlay{display:none;position:fixed;inset:0;background:#0008;z-index:10;align-items:flex-end;justify-content:center}.overlay.show{display:flex}.drawer{background:white;width:min(100%,560px);max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:22px}.drawer-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.close{background:#edf1ed;border-radius:50%;width:34px;height:34px;font-size:19px}
 .cart-line{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}.qty{display:flex;align-items:center;gap:6px}.qty button{background:#edf3ef;border-radius:8px;padding:5px 10px}
 .store-box{background:#f4f8f6;border:1px solid #d7e5df;border-radius:12px;padding:10px 12px;margin:12px 0;font-size:12px;line-height:1.7}
 .warn-box{background:#fff8eb;border:1px solid #f4cf8a;color:#7a4f01;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11px}
 .promo-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
 .promo-row{display:flex;gap:8px;margin-top:6px}
-.promo-row input{flex:1;border:1px solid #dce4de;border-radius:99px;padding:8px 12px;background:#fff;outline-color:var(--green2);text-transform:uppercase}
+.promo-row input{flex:1;border:1px solid #dce4de;border-radius:9px;padding:8px 12px;background:#fff;outline-color:var(--green2);text-transform:uppercase}
 .promo-msg{font-size:11px;margin-top:6px;line-height:1.5}
 .summary-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
 .summary-row{display:flex;justify-content:space-between;margin:5px 0}
@@ -79,7 +93,7 @@
 .promo-admin-grid input,.promo-admin-grid select{border:1px solid #dce4de;border-radius:8px;padding:8px;background:#fff;font-size:12px}
 .promo-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px}
 
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:repeat(3,1fr);gap:8px}.nav-tab-btn{padding:12px 6px;font-size:13px}.nav-tab-btn span.icon{font-size:26px}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:1fr;gap:10px}.nav-tab-btn{flex-direction:row;text-align:right;padding:14px 16px}.nav-tab-btn span.icon-badge{width:50px;height:50px;font-size:26px;flex-shrink:0}.nav-tab-btn div.tab-meta{flex:1}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -91,9 +105,9 @@
 <main class="wrap">
  <section class="hero">
   <div>
-    <div class="tag">خدمة توصيل محلية في دسوق والقرى المحيطة</div>
+    <div class="tag">✨ خدمة توصيل محلية فورية في دسوق والقرى المحيطة</div>
     <h1>كل طلباتك.. عند باب بيتك</h1>
-    <p>اختر القسم المناسب، تصفح المتاجر أو المنتجات، ومندوب وصّال يوصله لحد عندك.</p>
+    <p>ادخل على القسم المناسب من الأيقونات الرئيسية، اختر احتياجاتك بسهولة، ومندوب وصّال يوصله لحد عندك.</p>
     <div class="address">
       <select id="area"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى - اكتبها في العنوان</option></select>
       <input id="quickAddress" placeholder="اسم الشارع أو المنطقة">
@@ -103,24 +117,63 @@
   <div class="hero-art">🛵</div>
  </section>
 
- <!-- الأقساب المخصصة بالايفونات الثلاثة -->
- <nav class="main-nav-tabs">
-   <button class="nav-tab-btn active" id="tabBtnStores" onclick="switchMainTab('stores')">
-     <span class="icon">🏪</span>
-     <span>المتاجر المتاحة</span>
-     <small>سوبر ماركت، مخبز، صيدلية...</small>
-   </button>
-   <button class="nav-tab-btn" id="tabBtnRestaurants" onclick="switchMainTab('restaurants')">
-     <span class="icon">🍽️</span>
-     <span>المطاعم</span>
-     <small>وجبات ومأكولات جاهزة</small>
-   </button>
-   <button class="nav-tab-btn" id="tabBtnProducts" onclick="switchMainTab('products')">
-     <span class="icon">🛍️</span>
-     <span>المنتجات العامة</span>
-     <small>شراء سريع مقترح</small>
-   </button>
- </nav>
+ <!-- بوابة الأيقونات الرئيسية الفخمة -->
+ <section class="showcase-gateway" id="gatewaySection">
+  <div class="gateway-title">
+    <h2>اختر وجهتك الرئيسية</h2>
+    <span>اضغط على أي أيقونة للدخول إلى محتواها مباشرة</span>
+  </div>
+  <nav class="main-nav-tabs">
+    <button class="nav-tab-btn active" id="tabBtnStores" onclick="switchMainTab('stores')">
+      <span class="icon-badge">🏪</span>
+      <div class="tab-meta">
+        <div>المتاجر</div>
+        <small>سوبر ماركت، مخبز، صيدلية...</small>
+      </div>
+      <span class="nav-pill" id="countBadgeStores">المتاجر</span>
+    </button>
+    <button class="nav-tab-btn" id="tabBtnRestaurants" onclick="switchMainTab('restaurants')">
+      <span class="icon-badge">🍽️</span>
+      <div class="tab-meta">
+        <div>المطاعم</div>
+        <small>الشف دسوق ومأكولات جاهزة</small>
+      </div>
+      <span class="nav-pill" id="countBadgeRestaurants">المطاعم</span>
+    </button>
+    <button class="nav-tab-btn" id="tabBtnProducts" onclick="switchMainTab('products')">
+      <span class="icon-badge">🛍️</span>
+      <div class="tab-meta">
+        <div>المنتجات العامة</div>
+        <small>جميع المنتجات المعروضة</small>
+      </div>
+      <span class="nav-pill" id="countBadgeProducts">المنتجات</span>
+    </button>
+  </nav>
+
+  <!-- محتوى الأيقونة النشطة فقط -->
+  <div class="active-icon-stage" id="activeStage">
+    <div class="tab-content-section active" id="secStores">
+      <div class="section-head">
+        <div><h2>🏪 المتاجر</h2><p>المتاجر والسوبرماركت والمخابز والصيدليات المتاحة (قابل للإضافة مستقبلاً)</p></div>
+      </div>
+      <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
+    </div>
+
+    <div class="tab-content-section" id="secRestaurants">
+      <div class="section-head">
+        <div><h2>🍽️ المطاعم</h2><p>مطعم الشف دسوق والمطاعم المتاحة (قابل للإضافة والتوسع مستقبلاً)</p></div>
+      </div>
+      <section class="products" id="restaurantsContainer"><p class="muted">جاري تحميل المطاعم...</p></section>
+    </div>
+
+    <div class="tab-content-section" id="secProducts">
+      <div class="section-head">
+        <div><h2>🛍️ المنتجات العامة</h2><p>جميع المنتجات المعروضة المباشرة المتاحة للشراء السريع</p></div>
+      </div>
+      <section class="products" id="products"></section>
+    </div>
+  </div>
+ </section>
 
  <section class="panel" id="trackSection">
   <h3>🔍 تتبع طلبك لحظياً</h3>
@@ -132,26 +185,8 @@
   <div id="trackResult"></div>
  </section>
 
- <!-- قسم 1: المتاجر المتاحة -->
- <div class="tab-content-section active" id="secStores">
-   <div class="section-head"><div><h2>🏪 المتاجر المتاحة</h2><p>المتاجر والسوبرماركت والصيدليات المسجلة بالمنظومة (قابل للإضافة مستقبلاً)</p></div></div>
-   <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
- </div>
-
- <!-- قسم 2: المطاعم -->
- <div class="tab-content-section" id="secRestaurants">
-   <div class="section-head"><div><h2>🍽️ قائمة المطاعم</h2><p>المطاعم ومنافذ المأكولات الجاهزة (قابل للإضافة والتوسع مستقبلاً)</p></div></div>
-   <section class="products" id="restaurantsContainer"><p class="muted">جاري تحميل المطاعم...</p></section>
- </div>
-
- <!-- قسم 3: المنتجات العامة المعروضة -->
- <div class="tab-content-section" id="secProducts">
-   <div class="section-head"><div><h2>🛍️ المنتجات العامة المعروضة</h2><p>جميع الاصناف والمنتجات المقترحة المتاحة للشراء المباشر</p></div></div>
-   <section class="products" id="products"></section>
- </div>
-
  <section class="panel"><h3>الطلب من وصّال سهل</h3><div class="steps">
-  <div class="step"><b>① اختار طلبك</b><p>تصفح المنتجات أو المتجر وأضف احتياجاتك إلى السلة.</p></div>
+  <div class="step"><b>① اختار طلبك</b><p>ادخل على أيقونة المتاجر أو المطاعم أو المنتجات وأضف احتياجاتك للسلة.</p></div>
   <div class="step"><b>② أكد بياناتك</b><p>اكتب اسمك ورقم هاتفك وعنوان التوصيل بالتفصيل.</p></div>
   <div class="step"><b>③ استلم عند الباب</b><p>سيتواصل معك فريق التشغيل لتأكيد الطلب والتوصيل.</p></div>
  </div></section>
@@ -434,7 +469,9 @@ function deletePromoRule(code) {
   recalculateVisiblePanels();
 }
 
-const storeNameCache = {};
+const storeNameCache = {
+  "chef-dessouk": "مطعم الشف دسوق"
+};
 let allStoresList = [];
 let lastStoreOrders = [];
 let lastAdminOrders = [];
@@ -893,7 +930,7 @@ async function trackOrderByNumber(explicitNum = "", silent = false) {
   if (input && explicitNum) input.value = orderNum;
   try { localStorage.setItem(TRACK_ORDER_KEY, orderNum); } catch (_) {}
 
-  if (!silent && resultDiv) { listDiv.innerHTML = "<p class='muted'>جاري البحث عن حالة الطلب...</p>"; }
+  if (!silent && resultDiv) { resultDiv.innerHTML = "<p class='muted'>جاري البحث عن حالة الطلب...</p>"; }
 
   try {
     const { data, error } = await supabaseClient
@@ -1027,7 +1064,7 @@ function getCartStoreInfo() {
     };
   }
   if (uniqueNonNull.length === 0 && hasNull) {
-    return { label: "منتجات مقترحة (طلب عام)", hasMixedSources: false, storeId: null };
+    return { label: "منتجات عامة (طلب سريع)", hasMixedSources: false, storeId: null };
   }
   return {
     label: "عناصر من أكثر من مصدر أو متجر",
@@ -1038,7 +1075,7 @@ function getCartStoreInfo() {
 
 async function resolveStoreNamesForCart() {
   const idsToFetch = [...new Set(
-    cartItems.map(i => i.store_id).filter(id => id && !storeNameCache[id])
+    cartItems.map(i => i.store_id).filter(id => id && !storeNameCache[id] && !String(id).startsWith("chef-"))
   )];
   if (!idsToFetch.length) return;
   try {
@@ -1053,34 +1090,93 @@ async function resolveStoreNamesForCart() {
   } catch (_) {}
 }
 
+function addRestaurantQuickItem(name, price, emoji, storeRef) {
+  const key = `rest_${name}`;
+  const existing = cartItems.find(x => x.key === key);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cartItems.push({
+      key,
+      id: key,
+      name: `${name} (${emoji})`,
+      price: Number(price),
+      unit: "للوجبة",
+      qty: 1,
+      store_id: storeRef || null
+    });
+  }
+  saveCart(cartItems);
+  updateCart();
+  openCart();
+}
+
+function renderFeaturedRestaurants(dbRestaurants) {
+  const restContainer = document.getElementById('restaurantsContainer');
+  if (!restContainer) return;
+
+  const chefCard = `
+    <article class="product">
+      <div class="pic">👨‍🍳</div>
+      <h3>مطعم الشف دسوق</h3>
+      <small>التصنيف: مطاعم — مأكولات ووجبات طازجة</small>
+      <div class="price-row">
+        <span style="font-size: 12px; font-weight: bold; color: #137333;">مفتوح 🟢</span>
+        <button class="add" onclick="addRestaurantQuickItem('وجبة الشف دسوق', 115, '👨‍🍳', 'chef-dessouk')">+ اطلب وجبة</button>
+      </div>
+    </article>
+  `;
+
+  const renderDbRestaurant = store => `
+    <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
+      <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
+        ${!store.image_url ? '🍽️' : ''}
+      </div>
+      <h3>${store.name}</h3>
+      <small>التصنيف: ${store.category || 'مطاعم'}</small>
+      <div class="price-row">
+        <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
+          ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
+        </span>
+      </div>
+    </article>
+  `;
+
+  const extraCards = (dbRestaurants || []).map(renderDbRestaurant).join("");
+  restContainer.innerHTML = chefCard + extraCards;
+
+  const restBadge = document.getElementById("countBadgeRestaurants");
+  if (restBadge) {
+    restBadge.textContent = `${1 + (dbRestaurants ? dbRestaurants.length : 0)} مطعم`;
+  }
+}
+
 async function fetchStores() {
   try {
     const { data: stores, error } = await supabaseClient.from('stores').select('*');
     if (error) throw error;
 
     const container = document.getElementById('storesContainer');
-    const restContainer = document.getElementById('restaurantsContainer');
     if (!container) return;
 
-    if (!stores || stores.length === 0) {
-      container.innerHTML = '<p class="muted">لا توجد متاجر مضافة حالياً.</p>';
-      if (restContainer) restContainer.innerHTML = '<p class="muted">لا توجد مطاعم مضافة حالياً.</p>';
-      return;
-    }
+    allStoresList = stores || [];
+    allStoresList.forEach(s => { if (s && s.id) storeNameCache[s.id] = s.name; });
 
-    allStoresList = stores;
-    stores.forEach(s => { if (s && s.id) storeNameCache[s.id] = s.name; });
+    const isRestaurantCat = cat => {
+      const c = String(cat || '').trim();
+      return c === 'مطاعم' || c === 'مطعم' || c.toLowerCase() === 'restaurants' || c.toLowerCase() === 'restaurant';
+    };
 
-    const generalStores = stores.filter(s => (s.category || '').trim() !== 'مطاعم' && (s.category || '').trim() !== 'مطعم');
-    const restaurantStores = stores.filter(s => (s.category || '').trim() === 'مطاعم' || (s.category || '').trim() === 'مطعم');
+    const generalStores = allStoresList.filter(s => !isRestaurantCat(s.category));
+    const restaurantStores = allStoresList.filter(s => isRestaurantCat(s.category));
 
     const renderStoreCard = store => `
       <article class="product" style="cursor: pointer;" onclick="window.location.href='store.html?id=${store.id}'">
         <div class="pic" style="background-image: url('${store.image_url || ""}'); background-size: cover; background-position: center;">
-          ${!store.image_url ? (store.category === 'مطاعم' ? '🍽️' : '🏪') : ''}
+          ${!store.image_url ? '🏪' : ''}
         </div>
         <h3>${store.name}</h3>
-        <small>التصنيف: ${store.category || 'عام'}</small>
+        <small>التصنيف: ${store.category || 'متجر'}</small>
         <div class="price-row">
           <span style="font-size: 12px; font-weight: bold; color: ${store.status === 'open' ? '#137333' : '#c5221f'};">
             ${store.status === 'open' ? 'مفتوح 🟢' : 'مغلق 🔴'}
@@ -1091,20 +1187,21 @@ async function fetchStores() {
 
     container.innerHTML = generalStores.length
       ? generalStores.map(renderStoreCard).join("")
-      : '<p class="muted">لا توجد متاجر بهذه الفئة بعد.</p>';
+      : '<p class="muted">لا توجد متاجر إضافية مسجلة حالياً.</p>';
 
-    if (restContainer) {
-      restContainer.innerHTML = restaurantStores.length
-        ? restaurantStores.map(renderStoreCard).join("")
-        : '<p class="muted">لا توجد مطاعم مسجلة بجدول المتاجر بعد.</p>';
+    const storeBadge = document.getElementById("countBadgeStores");
+    if (storeBadge) {
+      storeBadge.textContent = `${generalStores.length} متجر`;
     }
 
+    renderFeaturedRestaurants(restaurantStores);
     updateCart();
   } catch (err) {
     console.error('خطأ في جلب المتاجر:', err);
     if (document.getElementById('storesContainer')) {
       document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
     }
+    renderFeaturedRestaurants([]);
   }
 }
 
@@ -1113,13 +1210,18 @@ function renderProducts(){
     <article class="product">
       <div class="pic">${p.emoji}</div>
       <h3>${p.name}</h3>
-      <small>${p.unit} - ${p.cat}</small>
+      <small>${p.unit} — ${p.cat}</small>
       <div class="price-row">
         <span class="price">${money(p.price)}</span>
         <button class="add" onclick="addCatalogItem(${p.id})">+ أضف</button>
       </div>
     </article>
   `).join("");
+
+  const prodBadge = document.getElementById("countBadgeProducts");
+  if (prodBadge) {
+    prodBadge.textContent = `${catalog.length} منتج`;
+  }
 }
 
 function addCatalogItem(id){
@@ -1249,12 +1351,15 @@ async function placeOrder(){
 
  const orderNum = "WD-" + Date.now().toString().slice(-6);
  const { subtotal, discount, finalTotal, promo } = calculateCartTotals();
- const firstStoreId = cartItems.find(item => item.store_id)?.store_id || null;
+ const rawStoreId = cartItems.find(item => item.store_id)?.store_id || null;
+ const validDbStoreId = (rawStoreId && !String(rawStoreId).startsWith("chef-")) ? rawStoreId : null;
+ const storeOriginLabel = rawStoreId ? (storeNameCache[rawStoreId] || rawStoreId) : "";
  const rawNotes = document.getElementById("notes").value.trim();
  const promoNote = discount > 0 && promo
    ? `كود خصم: ${activePromoCode} (خصم ${discount} ج.م من أصل ${subtotal} ج.م | جهة الخصم: ${getBearerLabel(promo.bearer)})`
    : "";
- const mergedNotes = [promoNote, rawNotes].filter(Boolean).join(" | ");
+ const originNote = (!validDbStoreId && storeOriginLabel) ? `الجهة: ${storeOriginLabel}` : "";
+ const mergedNotes = [originNote, promoNote, rawNotes].filter(Boolean).join(" | ");
 
  try {
    const orderPayload = {
@@ -1269,7 +1374,7 @@ async function placeOrder(){
      total: finalTotal,
      status: 'new'
    };
-   if (firstStoreId) orderPayload.store_id = firstStoreId;
+   if (validDbStoreId) orderPayload.store_id = validDbStoreId;
 
    const { data: orderData, error: orderErr } = await supabaseClient
      .from('orders')
@@ -1504,7 +1609,7 @@ async function showAdmin(){
 
 async function ensureStoreNamesLoaded(orders) {
   const missingIds = [...new Set(
-    (orders || []).map(o => o.store_id).filter(id => id && !storeNameCache[id])
+    (orders || []).map(o => o.store_id).filter(id => id && !storeNameCache[id] && !String(id).startsWith("chef-"))
   )];
   if (!missingIds.length) return;
   try {
@@ -1618,6 +1723,7 @@ async function updateOrderStatus(orderId, newStatus) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderFeaturedRestaurants([]);
   fetchStores();
   renderProducts();
   updateCart();
