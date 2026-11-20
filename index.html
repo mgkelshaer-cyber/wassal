@@ -46,11 +46,6 @@
 
 .products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:212px;transition:transform .18s ease,box-shadow .18s ease}.product:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(18,60,58,0.08)}.pic{height:88px;border-radius:14px;background:#f2f6f4;display:grid;place-items:center;font-size:43px;margin-bottom:12px;overflow:hidden}.product h3{font-size:15px;margin:0 0 5px}.product small{color:var(--muted);line-height:1.5}.price-row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:14px;gap:8px}.price{font-weight:800;color:var(--green2)}.add{background:var(--green);color:#fff;border-radius:10px;padding:8px 13px;font-weight:700;transition:background .18s ease}.add:hover{background:var(--green2)}
 
-.sub-shelf{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line)}
-.sub-shelf-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.sub-shelf-head h3{margin:0;font-size:16px;color:var(--green)}
-.sub-shelf-head span{font-size:12px;color:var(--muted)}
-
 .status-control-box{background:#f4f8f6;border:1px solid #d7e5df;border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;font-size:12px}
 .status-toggle-btn{padding:7px 12px;border-radius:9px;font-weight:800;font-size:12px;color:#fff}
 
@@ -182,13 +177,6 @@
         <div><h2>🏪 المتاجر</h2><p>المتاجر والسوبرماركت والمخابز والصيدليات المتاحة (قابل للإضافة مستقبلاً)</p></div>
       </div>
       <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
-      <div class="sub-shelf">
-        <div class="sub-shelf-head">
-          <h3>💊 منتجات الصيدلية الجاهزة للطلب السريع</h3>
-          <span>متاحة لإضافتها مباشرة للسلة حتى لو لم تُضاف منتجات داخل صفحة الصيدلية</span>
-        </div>
-        <section class="products" id="pharmacyQuickProducts"></section>
-      </div>
     </div>
 
     <div class="tab-content-section" id="secRestaurants">
@@ -388,13 +376,6 @@ const DEFAULT_PROMO_RULES = {
   WELCOME20: { type: "fixed", value: 20, bearer: "platform", active: true }
 };
 
-const pharmacyCatalog = [
-  { id: "ph1", name: "شاش ومعقم طبي", cat: "صيدليات", price: 35, unit: "للعبوة", emoji: "🩹" },
-  { id: "ph2", name: "فيتامينات ومقويات عامة", cat: "صيدليات", price: 95, unit: "للعبوة", emoji: "💊" },
-  { id: "ph3", name: "حقيبة إسعافات أولية منزلية", cat: "صيدليات", price: 140, unit: "للحقيبة", emoji: "🩺" },
-  { id: "ph4", name: "غسول ومرطب طبي للبشرة", cat: "صيدليات", price: 75, unit: "للعبوة", emoji: "🧴" }
-];
-
 function switchMainTab(tabName) {
   document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content-section').forEach(sec => sec.classList.remove('active'));
@@ -545,66 +526,12 @@ const catalog=[
  {id:9,name:"وجبة فراخ",cat:"مطاعم",price:110,unit:"للوجبة",emoji:"🍗"},
  {id:10,name:"مناديل ورقية",cat:"مستلزمات منزلية",price:25,unit:"للعبوة",emoji:"🧻"},
  {id:11,name:"مسحوق غسيل",cat:"مستلزمات منزلية",price:85,unit:"للعبوة",emoji:"🧼"},
- {id:12,name:"مستلزمات عناية شخصية",cat:"صيدليات",price:45,unit:"للقطعة",emoji:"🧴"},
- ...pharmacyCatalog
+ {id:12,name:"مستلزمات عناية شخصية",cat:"مستلزمات منزلية",price:45,unit:"للقطعة",emoji:"🧴"}
 ];
 
 function isStoreOpenStatus(status) {
   const s = String(status || "open").trim().toLowerCase();
   return s === "open" || s === "مفتوح" || s === "active";
-}
-
-function findPharmacyStore() {
-  return (allStoresList || []).find(s => {
-    const combined = `${s.name || ""} ${s.category || ""}`.toLowerCase();
-    return combined.includes("صيدل") || combined.includes("pharmacy");
-  }) || null;
-}
-
-function renderPharmacyQuickProducts() {
-  const box = document.getElementById("pharmacyQuickProducts");
-  if (!box) return;
-  const phStore = findPharmacyStore();
-  const phOpen = phStore ? isStoreOpenStatus(phStore.status) : true;
-  const phStoreId = phStore ? phStore.id : null;
-
-  box.innerHTML = pharmacyCatalog.map(p => `
-    <article class="product">
-      <div class="pic">${p.emoji}</div>
-      <h3>${p.name}</h3>
-      <small>${p.unit} — ${phStore ? phStore.name : p.cat}</small>
-      <div class="price-row">
-        <span class="price">${money(p.price)}</span>
-        <button class="add" onclick="addPharmacyItem('${p.id}', '${phStoreId || ""}', ${phOpen})">+ أضف</button>
-      </div>
-    </article>
-  `).join("");
-}
-
-function addPharmacyItem(id, storeId, isOpen = true) {
-  if (!isOpen) {
-    alert("الصيدلية مغلقة حالياً ولا تستقبل طلبات جديدة.");
-    return;
-  }
-  const p = pharmacyCatalog.find(x => String(x.id) === String(id));
-  if (!p) return;
-  const key = `ph_${p.id}`;
-  const existing = cartItems.find(x => x.key === key);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cartItems.push({
-      key,
-      id: p.id,
-      name: p.name,
-      price: Number(p.price),
-      unit: p.unit,
-      qty: 1,
-      store_id: storeId || null
-    });
-  }
-  saveCart(cartItems);
-  updateCart();
 }
 
 function renderStoreOwnerStatusBar() {
@@ -663,22 +590,28 @@ async function toggleStoreStatus(storeId, currentStatus) {
   if (!storeId) return;
   const nextStatus = isStoreOpenStatus(currentStatus) ? "closed" : "open";
   try {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('stores')
       .update({ status: nextStatus })
-      .eq('id', storeId);
+      .eq('id', storeId)
+      .select();
 
     if (error) throw error;
+    if (!Array.isArray(data) || data.length === 0) {
+      alert("لم يتم تعديل الصف في قاعدة البيانات (تحقق من صلاحية UPDATE أو سياسة RLS على جدول stores في Supabase).");
+      return;
+    }
 
+    const updatedStatus = data[0].status || nextStatus;
     allStoresList = allStoresList.map(s =>
-      String(s.id) === String(storeId) ? { ...s, status: nextStatus } : s
+      String(s.id) === String(storeId) ? { ...s, status: updatedStatus } : s
     );
 
     await fetchStores();
     renderStoreOwnerStatusBar();
     renderAdminStoresStatusList();
     updateCart();
-    alert(nextStatus === "open" ? "تم فتح المتجر بنجاح 🟢" : "تم إغلاق المتجر بنجاح 🔴");
+    alert(isStoreOpenStatus(updatedStatus) ? "تم فتح المتجر بنجاح 🟢" : "تم إغلاق المتجر بنجاح 🔴");
   } catch (err) {
     alert("تعذر تحديث حالة المتجر: " + err.message);
   }
@@ -1402,7 +1335,6 @@ async function fetchStores() {
     }
 
     renderFeaturedRestaurants(restaurantStores);
-    renderPharmacyQuickProducts();
     renderStoreOwnerStatusBar();
     renderAdminStoresStatusList();
     updateCart();
@@ -1412,7 +1344,6 @@ async function fetchStores() {
       document.getElementById('storesContainer').innerHTML = '<p class="muted">تعسّر تحميل المتاجر حالياً.</p>';
     }
     renderFeaturedRestaurants([]);
-    renderPharmacyQuickProducts();
   }
 }
 
@@ -1424,7 +1355,7 @@ function renderProducts(){
       <small>${p.unit} — ${p.cat}</small>
       <div class="price-row">
         <span class="price">${money(p.price)}</span>
-        <button class="add" onclick="addCatalogItem('${p.id}')">+ أضف</button>
+        <button class="add" onclick="addCatalogItem(${p.id})">+ أضف</button>
       </div>
     </article>
   `).join("");
@@ -1436,7 +1367,7 @@ function renderProducts(){
 }
 
 function addCatalogItem(id){
-  const p = catalog.find(x => String(x.id) === String(id));
+  const p = catalog.find(x => x.id === id);
   if (!p) return;
   const key = `cat_${p.id}`;
   const existing = cartItems.find(x => x.key === key);
@@ -1941,7 +1872,6 @@ async function updateOrderStatus(orderId, newStatus) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderFeaturedRestaurants([]);
-  renderPharmacyQuickProducts();
   fetchStores();
   renderProducts();
   updateCart();
