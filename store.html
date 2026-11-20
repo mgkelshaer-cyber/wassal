@@ -14,7 +14,7 @@
 .top small{display:block;color:#d6e4df;font-size:11px;font-weight:400;margin-top:3px}.top button{background:#fff;color:var(--green);padding:10px 14px;border-radius:12px;font-weight:700}
 .wrap{max-width:1120px;margin:auto;padding:20px 16px 70px}
 .store-header{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:20px;box-shadow:0 4px 10px rgba(0,0,0,0.03)}
-.store-img{width:100px;height:100px;border-radius:16px;object-fit:cover;background:#e8efec;display:grid;place-items:center;font-size:38px;overflow:hidden}
+.store-img{width:100px;height:100px;border-radius:16px;object-fit:cover;background:#e8efec;display:grid;place-items:center;font-size:38px;overflow:hidden;flex-shrink:0}
 .store-info h1{margin:0 0 8px;font-size:24px}.store-info p{margin:0;color:var(--muted);font-size:14px}
 .products{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .product{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;min-height:205px}
@@ -52,6 +52,7 @@
   <div class="store-info">
    <h1 id="storeName">جاري التحميل...</h1>
    <p id="storeCategory">التصنيف: ...</p>
+   <p id="storeStatusBadge" style="margin-top:6px;font-weight:800;font-size:13px"></p>
   </div>
  </section>
 
@@ -84,9 +85,28 @@ const CART_STORAGE_KEY = "wassal_cart_v1";
 const urlParams = new URLSearchParams(window.location.search);
 const storeId = urlParams.get('id');
 
+const pharmacyDefaultProducts = [
+  { id: "ph_gauze", name: "شاش ومعقم طبي", price: 35, unit: "للعبوة", emoji: "🩹" },
+  { id: "ph_vitamins", name: "فيتامينات ومقويات عامة", price: 95, unit: "للعبوة", emoji: "💊" },
+  { id: "ph_firstaid", name: "حقيبة إسعافات أولية منزلية", price: 140, unit: "للحقيبة", emoji: "🩺" },
+  { id: "ph_skincare", name: "غسول ومرطب طبي للبشرة", price: 75, unit: "للعبوة", emoji: "🧴" }
+];
+
 let currentStoreName = "";
+let currentStoreIsOpen = true;
 let productsList = [];
 const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
+
+function isStoreOpenStatus(status) {
+  const s = String(status || "open").trim().toLowerCase();
+  return s === "open" || s === "مفتوح" || s === "active";
+}
+
+function isPharmacyStore(store) {
+  if (!store) return false;
+  const combined = `${store.name || ""} ${store.category || ""}`.toLowerCase();
+  return combined.includes("صيدل") || combined.includes("pharmacy");
+}
 
 function loadCart() {
   try {
@@ -108,25 +128,27 @@ let cartItems = loadCart();
 
 function getCartStoreInfo() {
   if (!cartItems.length) {
-    return { label: "لا توجد عناصر بعد", hasMixedSources: false };
+    return { label: "لا توجد عناصر بعد", hasMixedSources: false, storeClosed: false };
   }
   const ids = cartItems.map(i => i.store_id || null);
   const uniqueStores = [...new Set(ids.filter(Boolean))];
   const hasNull = ids.some(id => !id);
+  const storeClosed = String(uniqueStores[0] || "") === String(storeId) && !currentStoreIsOpen;
 
   if (uniqueStores.length === 1 && !hasNull) {
     const sid = uniqueStores[0];
     const namePart = (String(sid) === String(storeId) && currentStoreName)
       ? `${currentStoreName}`
       : `متجر (${sid})`;
-    return { label: `متجر: ${namePart}`, hasMixedSources: false };
+    return { label: `متجر: ${namePart}`, hasMixedSources: false, storeClosed };
   }
   if (uniqueStores.length === 0 && hasNull) {
-    return { label: "منتجات مقترحة (طلب عام)", hasMixedSources: false };
+    return { label: "منتجات مقترحة (طلب عام)", hasMixedSources: false, storeClosed: false };
   }
   return {
     label: "عناصر من أكثر من مصدر أو متجر",
-    hasMixedSources: true
+    hasMixedSources: true,
+    storeClosed
   };
 }
 
@@ -150,8 +172,16 @@ async function loadStoreData() {
   }
 
   currentStoreName = store.name || "";
+  currentStoreIsOpen = isStoreOpenStatus(store.status);
+
   document.getElementById('storeName').textContent = store.name;
   document.getElementById('storeCategory').textContent = "التصنيف: " + (store.category || 'عام');
+
+  const statusBadge = document.getElementById('storeStatusBadge');
+  if (statusBadge) {
+    statusBadge.textContent = currentStoreIsOpen ? "مفتوح 🟢" : "مغلق 🔴";
+    statusBadge.style.color = currentStoreIsOpen ? "#137333" : "#c5221f";
+  }
 
   const imgBox = document.getElementById('storeImgBox');
   if (store.image_url) {
@@ -167,25 +197,41 @@ async function loadStoreData() {
 
   const container = document.getElementById('productsContainer');
 
-  if (prodErr || !products || products.length === 0) {
-    container.innerHTML = '<p class="muted">لا توجد منتجات مضافة في هذا المتجر حالياً.</p>';
+  if (!prodErr && Array.isArray(products) && products.length > 0) {
+    productsList = products;
+    container.innerHTML = products.map(p => `
+      <article class="product">
+        <div class="pic" style="background-image: url('${p.image_url || ''}')">
+          ${!p.image_url ? '📦' : ''}
+        </div>
+        <h3>${p.name}</h3>
+        <small>${p.unit || 'للقطعة'}</small>
+        <div class="price-row">
+          <span class="price">${money(p.price)}</span>
+          <button class="add" onclick="addStoreProduct('${p.id}')">+ أضف</button>
+        </div>
+      </article>
+    `).join("");
     return;
   }
 
-  productsList = products;
-  container.innerHTML = products.map(p => `
-    <article class="product">
-      <div class="pic" style="background-image: url('${p.image_url || ''}')">
-        ${!p.image_url ? '📦' : ''}
-      </div>
-      <h3>${p.name}</h3>
-      <small>${p.unit || 'للقطعة'}</small>
-      <div class="price-row">
-        <span class="price">${money(p.price)}</span>
-        <button class="add" onclick="addStoreProduct('${p.id}')">+ أضف</button>
-      </div>
-    </article>
-  `).join("");
+  if (isPharmacyStore(store)) {
+    productsList = pharmacyDefaultProducts;
+    container.innerHTML = pharmacyDefaultProducts.map(p => `
+      <article class="product">
+        <div class="pic">${p.emoji}</div>
+        <h3>${p.name}</h3>
+        <small>${p.unit} — ${store.name}</small>
+        <div class="price-row">
+          <span class="price">${money(p.price)}</span>
+          <button class="add" onclick="addStoreProduct('${p.id}')">+ أضف</button>
+        </div>
+      </article>
+    `).join("");
+    return;
+  }
+
+  container.innerHTML = '<p class="muted">لا توجد منتجات مضافة في هذا المتجر حالياً.</p>';
 }
 
 function addStoreProduct(id){
@@ -247,6 +293,7 @@ function updateCart(){
   contextBox.innerHTML = `
     <div class="store-box">
       <b>جهة الطلب:</b> ${storeInfo.label}
+      ${storeInfo.storeClosed ? `<div class="warn-box">تنبيه: هذا المتجر مغلق حالياً؛ لا يمكن إرسال الطلب أثناء إغلاق المتجر.</div>` : ""}
       ${storeInfo.hasMixedSources ? `<div class="warn-box">تنبيه: السلة تجمع عناصر من مصادر أو متاجر متعددة؛ يُفضّل إرسال كل طلب من متجر واحد لتسهيل التجهيز والتوصيل.</div>` : ""}
     </div>
   `;
@@ -281,6 +328,7 @@ function closeCart(){document.getElementById("overlay").classList.remove("show")
 
 async function placeOrder(){
  if(!totalCount()){alert("أضف منتجاً أولاً.");return}
+ if(String(storeId || "") && !currentStoreIsOpen){alert("هذا المتجر مغلق حالياً ولا يمكن إرسال الطلب إليه.");return}
  const name = document.getElementById("customerName").value.trim();
  const phone = document.getElementById("customerPhone").value.trim();
  const address = document.getElementById("customerAddress").value.trim();
