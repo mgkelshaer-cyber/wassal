@@ -54,7 +54,13 @@
 .courier-btn:disabled{background:#cbd5e1 !important;color:#475569;cursor:not-allowed}
 .quick-links{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
 .quick-link{text-decoration:none;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700}
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+.track-form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.track-form input{flex:1;min-width:200px;border:1px solid #dce4de;border-radius:10px;padding:10px 12px;background:#fff;outline-color:var(--green2)}
+.track-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.track-step{border:1px solid var(--line);background:#f8faf9;border-radius:12px;padding:10px;font-size:12px;color:var(--muted)}
+.track-step.done{border-color:#86efac;background:#f0fdf4;color:#166534;font-weight:700}
+.track-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fcfdfb;font-size:13px}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -68,6 +74,16 @@
   <div><div class="tag">خدمة توصيل محلية في دسوق والقرى المحيطة</div><h1>كل طلباتك.. عند باب بيتك</h1><p>اختار احتياجاتك من الأقسام، ابعت طلبك، ومندوب وصّال يوصله لحد عندك.</p>
    <div class="address"><select id="area"><option>مدينة دسوق</option><option>شباس الشهداء</option><option>محلة أبو علي</option><option>سنّهور المدينة</option><option>أبو زيادة</option><option>قرية أخرى - اكتبها في العنوان</option></select><input id="quickAddress" placeholder="اسم الشارع أو المنطقة"><button onclick="document.getElementById('customerAddress').value=document.getElementById('quickAddress').value;openCart()">اطلب الآن</button></div>
   </div><div class="hero-art">🛵</div>
+ </section>
+
+ <section class="panel" id="trackSection">
+  <h3>🔍 تتبع طلبك لحظياً</h3>
+  <p class="muted" style="margin-top:0">أدخل رقم الطلب (مثال: WD-809878) لمتابعة حالته وبيانات التوصيل خطوة بخطوة.</p>
+  <div class="track-form">
+    <input id="trackOrderInput" placeholder="اكتب رقم الطلب مثل WD-809878" onkeydown="if(event.key==='Enter')trackOrderByNumber()">
+    <button class="add" onclick="trackOrderByNumber()" style="padding:10px 18px">تتبع الطلب</button>
+  </div>
+  <div id="trackResult"></div>
  </section>
 
  <div class="section-head"><div><h2>المتاجر المتاحة</h2><p>اختر المتجر المناسب لطلبك</p></div></div>
@@ -200,6 +216,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const CART_STORAGE_KEY = "wassal_cart_v1";
 const DISPATCH_STORAGE_KEY = "wassal_dispatch_v1";
 const COURIER_ACTIVE_KEY = "wassal_active_courier_v1";
+const TRACK_ORDER_KEY = "wassal_last_track_order_v1";
 const storeNameCache = {};
 let allStoresList = [];
 let lastStoreOrders = [];
@@ -208,6 +225,7 @@ let lastCourierAllOrders = [];
 let ordersRealtimeChannel = null;
 let storeRealtimeChannel = null;
 let courierRealtimeChannel = null;
+let trackRealtimeChannel = null;
 let realtimeRefreshTimer = null;
 let soundAlertEnabled = true;
 
@@ -542,6 +560,119 @@ function renderCourierOrdersList(orders) {
   }).join("");
 }
 
+function getTrackingStageIndex(status) {
+  if (status === "cancelled" || status === "canceled") return -1;
+  if (status === "delivered") return 3;
+  if (status === "on_the_way" || status === "out_for_delivery" || status === "picked_up") return 2;
+  return 1;
+}
+
+function renderTrackedOrderCard(order) {
+  const resultDiv = document.getElementById("trackResult");
+  if (!resultDiv) return;
+  if (!order) {
+    resultDiv.innerHTML = "<p class='muted'>لم يتم العثور على طلب بهذا الرقم. تأكد من كتابة الرقم بشكل صحيح.</p>";
+    return;
+  }
+
+  const stage = getTrackingStageIndex(order.status);
+  const isCancelled = stage === -1;
+  const storeLabel = order.store_id
+    ? (storeNameCache[order.store_id] || `متجر (${order.store_id})`)
+    : "طلب عام";
+  const courier = getOrderCourier(order);
+  const itemsList = order.order_items ? order.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+
+  const step1Class = !isCancelled && stage >= 1 ? "track-step done" : "track-step";
+  const step2Class = !isCancelled && stage >= 2 ? "track-step done" : "track-step";
+  const step3Class = !isCancelled && stage >= 3 ? "track-step done" : "track-step";
+
+  resultDiv.innerHTML = `
+    <div class="track-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div><b>رقم الطلب:</b> ${order.order_number} ${getStatusLabel(order.status)}</div>
+        <small class="muted">${new Date(order.created_at).toLocaleString('ar-EG')}</small>
+      </div>
+      <div><b>المتجر / الجهة:</b> ${storeLabel}</div>
+      <div><b>العنوان:</b> ${order.delivery_area} - ${order.delivery_address}</div>
+      ${itemsList ? `<div><b>المنتجات:</b> ${itemsList}</div>` : ''}
+      <div><b>الإجمالي:</b> ${money(order.total)}</div>
+      <div><b>المندوب:</b> ${courier.name ? `${courier.name}${courier.phone ? ` (${courier.phone})` : ""}` : "قيد الإسناد"}</div>
+      ${isCancelled
+        ? `<div class="warn-box" style="margin-top:10px">تم إلغاء هذا الطلب. إذا كان لديك استفسار تواصل مع فريق التشغيل.</div>`
+        : `<div class="track-steps">
+            <div class="${step1Class}">① تم استلام / تجهيز الطلب</div>
+            <div class="${step2Class}">② جاري التوصيل</div>
+            <div class="${step3Class}">③ تم التوصيل</div>
+          </div>`
+      }
+    </div>
+  `;
+}
+
+function subscribeTrackRealtime(orderNumber) {
+  if (trackRealtimeChannel) {
+    supabaseClient.removeChannel(trackRealtimeChannel);
+    trackRealtimeChannel = null;
+  }
+  if (!orderNumber) return;
+
+  trackRealtimeChannel = supabaseClient
+    .channel(`wassal-track-${orderNumber}`)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "orders" },
+      (payload) => {
+        const rec = payload?.new || payload?.old || {};
+        if (!rec.order_number || String(rec.order_number).trim().toLowerCase() === orderNumber.toLowerCase()) {
+          trackOrderByNumber(orderNumber, true);
+        }
+      }
+    )
+    .subscribe();
+}
+
+async function trackOrderByNumber(explicitNum = "", silent = false) {
+  const input = document.getElementById("trackOrderInput");
+  const resultDiv = document.getElementById("trackResult");
+  const orderNum = String(explicitNum || (input ? input.value : "") || "").trim();
+
+  if (!orderNum) {
+    if (resultDiv) resultDiv.innerHTML = "<p class='muted'>أدخل رقم الطلب أولاً لعرض حالته.</p>";
+    return;
+  }
+
+  if (input && explicitNum) input.value = orderNum;
+  try {
+    localStorage.setItem(TRACK_ORDER_KEY, orderNum);
+  } catch (_) {}
+
+  if (!silent && resultDiv) {
+    resultDiv.innerHTML = "<p class='muted'>جاري البحث عن حالة الطلب...</p>";
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('orders')
+      .select('*, order_items(*)')
+      .ilike('order_number', orderNum)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    const found = Array.isArray(data) && data.length ? data[0] : null;
+    if (found) {
+      await ensureStoreNamesLoaded([found]);
+    }
+    renderTrackedOrderCard(found);
+    subscribeTrackRealtime(orderNum);
+  } catch (err) {
+    if (resultDiv) {
+      resultDiv.innerHTML = "<p style='color:red;'>تعذر جلب حالة الطلب: " + err.message + "</p>";
+    }
+  }
+}
+
 let cartItems = loadCart();
 const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
 
@@ -846,6 +977,7 @@ async function placeOrder(){
    if (itemsErr) throw itemsErr;
 
    alert("✅ تم إرسال طلبك بنجاح! رقم الطلب: " + orderNum);
+   trackOrderByNumber(orderNum, true);
    cartItems = [];
    saveCart(cartItems);
    updateCart();
@@ -1207,6 +1339,12 @@ document.addEventListener('DOMContentLoaded', () => {
   renderProducts();
   updateCart();
   updateSoundButtons();
+  try {
+    const savedTrack = localStorage.getItem(TRACK_ORDER_KEY) || "";
+    if (savedTrack) {
+      trackOrderByNumber(savedTrack, true);
+    }
+  } catch (_) {}
 });
 
 document.querySelector(".brand").style.cursor = "pointer";
