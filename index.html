@@ -29,6 +29,10 @@
 .warn-box{background:#fff8eb;border:1px solid #f4cf8a;color:#7a4f01;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11px}
 .summary-box{background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;font-size:13px}
 .summary-row{display:flex;justify-content:space-between;margin:5px 0}
+.settlement-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.settle-card{background:#f6f9f7;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12px}
+.settle-card b{display:block;font-size:15px;color:var(--green2);margin-top:4px}
+.comm-line{margin-top:6px;padding-top:6px;border-top:1px dashed #e1e8e4;font-size:12px;color:#334155}
 .field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #dce4de;border-radius:10px;padding:12px;background:#fff;outline-color:var(--green2)}.submit{width:100%;padding:14px;background:var(--green);color:white;border-radius:12px;font-weight:800;margin-top:12px}.muted{color:var(--muted);font-size:12px;line-height:1.7}
 .admin,.store-panel{display:none}.admin.show,.store-panel.show{display:block}
 .order{border:1px solid var(--line);padding:12px;border-radius:12px;margin:9px 0;font-size:13px;background:#fcfdfb}
@@ -40,7 +44,7 @@
 .badge.accepted,.badge.preparing{background:#dbeafe;color:#1e40af}
 .badge.on_the_way{background:#ede9fe;color:#5b21b6}
 .badge.delivered{background:#dcfce7;color:#166534}
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:22px}.hero-art{display:none}.categories{grid-template-columns:repeat(3,1fr)}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -70,7 +74,7 @@
  
  <section class="panel">
   <h3>للمتاجر والمندوبين والإدارة</h3>
-  <p class="muted">يتم إدارة العمليات واستقبال الطلبات من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
+  <p class="muted">يتم إدارة العمليات واستقبال الطلبات والتسويات من خلال لوحات التحكم المخصصة داخل النظام الموحد.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
     <button class="add" onclick="showStoreOwnerPanel()" style="background:var(--green2)">🏪 لوحة تحكم المتجر</button>
     <button class="add" onclick="showAdmin()">🛡️ لوحة التحكم الإدارية</button>
@@ -79,34 +83,42 @@
  
  <section class="panel store-panel" id="storePanel">
   <div class="drawer-head">
-    <h3>لوحة تحكم المتجر (استقبال الطلبات)</h3>
+    <h3>لوحة تحكم المتجر (استقبال الطلبات والتسويات)</h3>
     <button class="close" onclick="closeStorePanel()">×</button>
   </div>
   <div class="admin-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <label><b>اختر المتجر:</b></label>
       <select id="storeOwnerSelect" onchange="fetchStoreOwnerOrders()" style="padding:6px;border-radius:8px;border:1px solid #ccc"></select>
+      <label><b>نسبة العمولة %:</b></label>
+      <input id="storeCommissionRate" type="number" min="0" max="100" step="0.5" value="10" onchange="recalculateVisiblePanels()" style="width:72px;padding:6px;border-radius:8px;border:1px solid #ccc">
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="storeRealtimeStatus" class="rt-pill">⏳ البث اللحظي للطلبات</span>
       <button onclick="fetchStoreOwnerOrders()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث</button>
     </div>
   </div>
+  <div id="storeSettlementSummary"></div>
   <div id="storeOrdersList"><p class="muted">اختر المتجر لعرض الطلبات الخاصة به...</p></div>
  </section>
 
  <section class="panel admin" id="admin">
   <div class="drawer-head">
-    <h3>لوحة تحكم وصّال (مركز الطلبات العام)</h3>
+    <h3>لوحة تحكم وصّال (مركز الطلبات والعمولات)</h3>
     <button class="close" onclick="closeAdmin()">×</button>
   </div>
   <div class="admin-bar">
-    <span id="realtimeStatus" class="rt-pill">⏳ وضع التحديث اللحظي في الانتظار</span>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span id="realtimeStatus" class="rt-pill">⏳ وضع التحديث اللحظي في الانتظار</span>
+      <label><b>نسبة العمولة %:</b></label>
+      <input id="adminCommissionRate" type="number" min="0" max="100" step="0.5" value="10" onchange="recalculateVisiblePanels()" style="width:72px;padding:6px;border-radius:8px;border:1px solid #ccc">
+    </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="lastSyncText" class="muted">آخر مزامنة: —</span>
       <button onclick="fetchOrdersFromSupabase()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث الآن</button>
     </div>
   </div>
+  <div id="adminSettlementSummary"></div>
   <div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div>
  </section>
 
@@ -137,6 +149,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const CART_STORAGE_KEY = "wassal_cart_v1";
 const storeNameCache = {};
 let allStoresList = [];
+let lastStoreOrders = [];
+let lastAdminOrders = [];
 let ordersRealtimeChannel = null;
 let storeRealtimeChannel = null;
 let realtimeRefreshTimer = null;
@@ -174,6 +188,58 @@ function saveCart(items) {
 
 let cartItems = loadCart();
 const money = n => Number(n || 0).toLocaleString("ar-EG") + " ج.م";
+
+function getCommissionRate(inputId) {
+  const el = document.getElementById(inputId);
+  const val = el ? Number(el.value) : 10;
+  if (Number.isNaN(val) || val < 0) return 0;
+  if (val > 100) return 100;
+  return val;
+}
+
+function calculateOrderCommission(order, ratePercent) {
+  const isCanceled = order.status === "cancelled" || order.status === "canceled";
+  const baseAmount = Number(order.total || 0);
+  if (isCanceled || baseAmount <= 0) {
+    return { commission: 0, netStore: 0, isCanceled };
+  }
+  const commission = Number(((baseAmount * ratePercent) / 100).toFixed(2));
+  const netStore = Number(Math.max(0, baseAmount - commission).toFixed(2));
+  return { commission, netStore, isCanceled };
+}
+
+function buildSettlementSummaryHtml(orders, ratePercent) {
+  const activeOrders = (orders || []).filter(o => o.status !== "cancelled" && o.status !== "canceled");
+  const grossSales = activeOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+  const totalCommission = activeOrders.reduce((sum, o) => sum + calculateOrderCommission(o, ratePercent).commission, 0);
+  const totalNetStore = Math.max(0, grossSales - totalCommission);
+
+  return `
+    <div class="settlement-grid">
+      <div class="settle-card">
+        <span>إجمالي الطلبات الفعّالة (${activeOrders.length})</span>
+        <b>${money(grossSales)}</b>
+      </div>
+      <div class="settle-card">
+        <span>عمولة وصّال (${ratePercent}%)</span>
+        <b>${money(totalCommission)}</b>
+      </div>
+      <div class="settle-card">
+        <span>صافي مستحقات المتجر</span>
+        <b>${money(totalNetStore)}</b>
+      </div>
+    </div>
+  `;
+}
+
+function recalculateVisiblePanels() {
+  if (document.getElementById("storePanel").classList.contains("show")) {
+    renderStoreOrdersList(lastStoreOrders);
+  }
+  if (document.getElementById("admin").classList.contains("show")) {
+    renderAdminOrdersList(lastAdminOrders);
+  }
+}
 
 function getCartStoreInfo() {
   if (!cartItems.length) {
@@ -524,11 +590,52 @@ function subscribeStoreRealtime() {
     });
 }
 
+function renderStoreOrdersList(orders) {
+  const summaryEl = document.getElementById("storeSettlementSummary");
+  const listDiv = document.getElementById("storeOrdersList");
+  const rate = getCommissionRate("storeCommissionRate");
+
+  if (!orders || orders.length === 0) {
+    if (summaryEl) summaryEl.innerHTML = "";
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة لهذا المتجر حتى الآن.</p>";
+    return;
+  }
+
+  if (summaryEl) {
+    summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
+  }
+
+  listDiv.innerHTML = orders.map(o => {
+    const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+    const calc = calculateOrderCommission(o, rate);
+    const commText = calc.isCanceled
+      ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
+      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+
+    return `<div class="order">
+      <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+      <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+      <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+      <b>المنتجات المطلوب تحضيرها:</b> ${itemsList}<br>
+      <b>إجمالي المبلغ:</b> ${money(o.total)}
+      <div class="comm-line">${commText}</div>
+      ${o.notes ? `<div style="margin-top:4px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
+      <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+        <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">مقبول / قيد التجهيز</button>
+        <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاهز / جاري التوصيل</button>
+        <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء الطلب</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
 async function fetchStoreOwnerOrders(silent = false) {
   const select = document.getElementById("storeOwnerSelect");
   const selectedStoreId = select.value;
   const listDiv = document.getElementById("storeOrdersList");
+  const summaryEl = document.getElementById("storeSettlementSummary");
   if (!selectedStoreId) {
+    if (summaryEl) summaryEl.innerHTML = "";
     listDiv.innerHTML = "<p class='muted'>يرجى اختيار متجر أولاً.</p>";
     return;
   }
@@ -542,29 +649,8 @@ async function fetchStoreOwnerOrders(silent = false) {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-
-    if (!orders || orders.length === 0) {
-      listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة لهذا المتجر حتى الآن.</p>";
-      return;
-    }
-
-    listDiv.innerHTML = orders.map(o => {
-      const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
-
-      return `<div class="order">
-        <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
-        <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
-        <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
-        <b>المنتجات المطلوب تحضيرها:</b> ${itemsList}<br>
-        <b>إجمالي المبلغ:</b> ${money(o.total)}<br>
-        ${o.notes ? `<b>ملاحظات:</b> ${o.notes}` : ''}
-        <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
-          <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">مقبول / قيد التجهيز</button>
-          <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاهز / جاري التوصيل</button>
-          <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء الطلب</button>
-        </div>
-      </div>`;
-    }).join("");
+    lastStoreOrders = orders || [];
+    renderStoreOrdersList(lastStoreOrders);
   } catch (err) {
     listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
   }
@@ -636,9 +722,55 @@ async function ensureStoreNamesLoaded(orders) {
   } catch (_) {}
 }
 
+function renderAdminOrdersList(orders) {
+  const summaryEl = document.getElementById("adminSettlementSummary");
+  const listDiv = document.getElementById("ordersList");
+  const rate = getCommissionRate("adminCommissionRate");
+
+  if (!orders || orders.length === 0) {
+    if (summaryEl) summaryEl.innerHTML = "";
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة بعد.</p>";
+    return;
+  }
+
+  if (summaryEl) {
+    summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate);
+  }
+
+  listDiv.innerHTML = orders.map(o => {
+    const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
+    const storeLabel = o.store_id
+      ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
+      : "طلب عام";
+    const calc = calculateOrderCommission(o, rate);
+    const commText = calc.isCanceled
+      ? "الطلب ملغي — لا تُحتسب عمولة أو صافي"
+      : `عمولة المنصة (${rate}%): <b>${money(calc.commission)}</b> | صافي المتجر: <b style="color:var(--green2)">${money(calc.netStore)}</b>`;
+
+    return `<div class="order">
+      <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
+      <b>الجهة / المتجر:</b> ${storeLabel}<br>
+      <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
+      <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
+      <b>المنتجات:</b> ${itemsList}<br>
+      <b>الإجمالي:</b> ${money(o.total)}
+      <div class="comm-line">${commText}</div>
+      ${o.notes ? `<div style="margin-top:4px"><b>ملاحظات:</b> ${o.notes}</div>` : ''}
+      <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
+        <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">قيد التجهيز</button>
+        <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاري التوصيل</button>
+        <button onclick="updateOrderStatus('${o.id}', 'delivered')" style="background:#4CAF50;color:white;padding:5px 9px;border-radius:6px">تم التوصيل</button>
+        <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
 async function fetchOrdersFromSupabase(silent = false){
  const listDiv = document.getElementById("ordersList");
+ const summaryEl = document.getElementById("adminSettlementSummary");
  if (!silent) {
+   if (summaryEl) summaryEl.innerHTML = "";
    listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات...</p>";
  }
  try {
@@ -656,33 +788,8 @@ async function fetchOrdersFromSupabase(silent = false){
      syncEl.textContent = "آخر مزامنة: " + new Date().toLocaleTimeString("ar-EG");
    }
 
-   if(!orders || orders.length === 0){
-     listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة بعد.</p>";
-     return;
-   }
-
-   listDiv.innerHTML = orders.map(o => {
-     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
-     const storeLabel = o.store_id
-       ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
-       : "طلب عام";
-
-     return `<div class="order">
-       <b>${o.order_number}</b> ${getStatusLabel(o.status)} — <small>${new Date(o.created_at).toLocaleString('ar-EG')}</small><br>
-       <b>الجهة / المتجر:</b> ${storeLabel}<br>
-       <b>العميل:</b> ${o.customer_name} | <b>الهاتف:</b> ${o.customer_phone}<br>
-       <b>العنوان:</b> ${o.delivery_area} - ${o.delivery_address}<br>
-       <b>المنتجات:</b> ${itemsList}<br>
-       <b>الإجمالي:</b> ${money(o.total)}<br>
-       ${o.notes ? `<b>ملاحظات:</b> ${o.notes}` : ''}
-       <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;">
-         <button onclick="updateOrderStatus('${o.id}', 'preparing')" style="background:#2196F3;color:white;padding:5px 9px;border-radius:6px">قيد التجهيز</button>
-         <button onclick="updateOrderStatus('${o.id}', 'on_the_way')" style="background:#7c3aed;color:white;padding:5px 9px;border-radius:6px">جاري التوصيل</button>
-         <button onclick="updateOrderStatus('${o.id}', 'delivered')" style="background:#4CAF50;color:white;padding:5px 9px;border-radius:6px">تم التوصيل</button>
-         <button onclick="updateOrderStatus('${o.id}', 'cancelled')" style="background:#f44336;color:white;padding:5px 9px;border-radius:6px">إلغاء</button>
-       </div>
-     </div>`;
-   }).join("");
+   lastAdminOrders = orders || [];
+   renderAdminOrdersList(lastAdminOrders);
  } catch(err) {
    listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
  }
