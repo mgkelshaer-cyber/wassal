@@ -18,7 +18,6 @@
 .address{display:flex;gap:8px;flex-wrap:wrap;background:#fff;padding:7px;border-radius:15px;max-width:560px;box-shadow:0 6px 18px rgba(0,0,0,0.12)}.address select,.address input{border:0;outline:0;padding:9px;background:#fff;color:var(--ink);min-width:120px;flex:1}.address button{background:linear-gradient(135deg,#ffb057,#f49a38);color:#153833;padding:10px 18px;border-radius:11px;font-weight:800}
 .hero-art{display:grid;place-items:center;font-size:104px;opacity:.98;filter:brightness(1.08) contrast(1.05) drop-shadow(0 12px 20px rgba(0,0,0,0.28))}
 
-/* أيقونات رئيسية مريحة للعين ومتناسقة مع خلفية وصّال */
 .showcase-gateway{margin:24px 0 16px}
 .gateway-title{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .gateway-title h2{margin:0;font-size:20px;color:var(--green)}
@@ -38,7 +37,6 @@
 .nav-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#eef4f1;color:var(--green2)}
 .nav-tab-btn.active .nav-pill{background:#fff2df;color:#8e4700}
 
-/* الحاوية الداخلية للأيقونة المختارة */
 .active-icon-stage{background:#fff;border:1.5px solid #d7e3dd;border-radius:24px;padding:20px;box-shadow:0 8px 22px rgba(18,60,58,0.05)}
 .tab-content-section{display:none}.tab-content-section.active{display:block;animation:fadeInTab .2s ease}
 @keyframes fadeInTab{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
@@ -52,7 +50,6 @@
 .panel{background:white;border:1px solid var(--line);border-radius:18px;padding:17px;margin-top:22px;box-shadow:0 4px 14px rgba(18,60,58,0.04)}.panel h3{margin:0 0 12px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.step{background:#f6f8f5;border-radius:13px;padding:14px}.step b{display:block;margin-bottom:5px}.step p{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
 .footer{background:#102f2d;color:#d8e5e1;text-align:center;padding:22px;font-size:12px}
 
-/* زر العربة العائم الأنيق */
 .cart-fab{position:fixed;bottom:20px;left:20px;background:linear-gradient(135deg,#123c3a 0%,#1d6960 62%,#f49a38 160%);color:#fff;border:2px solid rgba(255,212,156,0.55);border-radius:999px;padding:11px 18px 11px 14px;font-weight:800;box-shadow:0 12px 28px rgba(18,60,58,0.28);z-index:5;display:inline-flex;align-items:center;gap:9px;transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s ease}
 .cart-fab:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 16px 32px rgba(18,60,58,0.34)}
 .cart-fab-icon{width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,#ffc070,#f49a38);color:#123c3a;display:grid;place-items:center;box-shadow:0 4px 10px rgba(244,154,56,0.4)}
@@ -131,7 +128,6 @@
   <div class="hero-art">🛵</div>
  </section>
 
- <!-- بوابة الأيقونات الرئيسية المتناسقة والمريحة للعين -->
  <section class="showcase-gateway" id="gatewaySection">
   <div class="gateway-title">
     <h2>اختر وجهتك الرئيسية</h2>
@@ -170,18 +166,17 @@
     </button>
   </nav>
 
-  <!-- محتوى الأيقونة النشطة فقط -->
   <div class="active-icon-stage" id="activeStage">
     <div class="tab-content-section active" id="secStores">
       <div class="section-head">
-        <div><h2>🏪 المتاجر</h2><p>المتاجر والسوبرماركت والمخابز والصيدليات المتاحة (قابل للإضافة مستقبلاً)</p></div>
+        <div><h2>🏪 المتاجر</h2><p>المتاجر والسوبرماركت والمخابز والصيدليات المتاحة</p></div>
       </div>
-      <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر من قاعدة البيانات...</p></section>
+      <section class="products" id="storesContainer"><p class="muted">جاري تحميل المتاجر...</p></section>
     </div>
 
     <div class="tab-content-section" id="secRestaurants">
       <div class="section-head">
-        <div><h2>🍽️ المطاعم</h2><p>مطعم الشف دسوق والمطاعم المتاحة (قابل للإضافة والتوسع مستقبلاً)</p></div>
+        <div><h2>🍽️ المطاعم</h2><p>مطعم الشف دسوق والمطاعم المتاحة</p></div>
       </div>
       <section class="products" id="restaurantsContainer"><p class="muted">جاري تحميل المطاعم...</p></section>
     </div>
@@ -323,14 +318,6 @@
   <div class="admin-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="realtimeStatus" class="rt-pill">⏳ وضع التحديث اللحظي في الانتظار</span>
-      <label><b>حالة التوصيل:</b></label>
-      <select id="deliveryFilter" onchange="renderAdminOrdersList(lastAdminOrders)" style="padding:6px;border-radius:8px;border:1px solid #ccc">
-        <option value="all">كل الطلبات</option>
-        <option value="preparing">قيد التجهيز</option>
-        <option value="on_the_way">جاري التوصيل</option>
-        <option value="delivered">تم التوصيل</option>
-        <option value="cancelled">ملغي</option>
-      </select>
       <label><b>نسبة العمولة %:</b></label>
       <input id="adminCommissionRate" type="number" min="0" max="100" step="0.5" value="10" onchange="recalculateVisiblePanels()" style="width:72px;padding:6px;border-radius:8px;border:1px solid #ccc">
     </div>
@@ -341,6 +328,15 @@
       <button onclick="fetchOrdersFromSupabase()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث الآن</button>
     </div>
   </div>
+  
+  <!-- تبويبات الطلبات الفولدرات -->
+  <div class="admin-tabs" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button type="button" class="admin-tab-btn active" id="tabAdminAll" onclick="setAdminFilter('all')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:var(--green);color:#fff">الكل</button>
+    <button type="button" class="admin-tab-btn" id="tabAdminPreparing" onclick="setAdminFilter('preparing')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:#e2e8f0;color:#334155">قيد التجهيز ⏳</button>
+    <button type="button" class="admin-tab-btn" id="tabAdminDelivered" onclick="setAdminFilter('delivered')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:#e2e8f0;color:#334155">تم التوصيل ✅</button>
+    <button type="button" class="admin-tab-btn" id="tabAdminCancelled" onclick="setAdminFilter('cancelled')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:#e2e8f0;color:#334155">تم الإلغاء ❌</button>
+  </div>
+
   <div class="alert-banner" id="adminAlertBanner">
     <span id="adminAlertText"></span>
     <button onclick="hideAlertBanner('adminAlertBanner')" style="background:transparent;color:#5c3c00;font-weight:800">×</button>
@@ -368,7 +364,7 @@
   <label for="promoCodeInput" style="font-size:12px;font-weight:700">🎟️ كود الخصم</label>
   <div class="promo-row">
    <input id="promoCodeInput" placeholder="أدخل كود الخصم" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode()}">
-   <button type="button" onclick="applyPromoCode()" style="background:var(--green2);color:#fff;padding:8px 12px;border-radius:9px;font-weight:700">تطبيق</button>
+   <button type="button" onclick="applyPromoCode()" style="background:var(--green2);color:#fff;padding:8px 12px;border-radius:99px;font-weight:700">تطبيق</button>
    <button type="button" onclick="clearPromoCode()" style="background:#edf1ed;color:var(--ink);padding:8px 10px;border-radius:9px;font-weight:700">إزالة</button>
   </div>
   <div class="promo-msg muted" id="promoMessage"></div>
@@ -399,6 +395,33 @@ const DEFAULT_PROMO_RULES = {
   WASSAL10: { type: "percent", value: 10, bearer: "platform", active: true },
   WELCOME20: { type: "fixed", value: 20, bearer: "platform", active: true }
 };
+
+let currentAdminFilter = 'all';
+
+function setAdminFilter(filterType) {
+  currentAdminFilter = filterType;
+  const tabMap = {
+    all: 'tabAdminAll',
+    preparing: 'tabAdminPreparing',
+    delivered: 'tabAdminDelivered',
+    cancelled: 'tabAdminCancelled'
+  };
+
+  Object.keys(tabMap).forEach(key => {
+    const btn = document.getElementById(tabMap[key]);
+    if (btn) {
+      if (key === filterType) {
+        btn.style.background = "var(--green)";
+        btn.style.color = "#fff";
+      } else {
+        btn.style.background = "#e2e8f0";
+        btn.style.color = "#334155";
+      }
+    }
+  });
+
+  renderAdminOrdersList(lastAdminOrders);
+}
 
 function switchMainTab(tabName) {
   document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1855,8 +1878,6 @@ function renderAdminOrdersList(orders) {
   const summaryEl = document.getElementById("adminSettlementSummary");
   const listDiv = document.getElementById("ordersList");
   const rate = getCommissionRate("adminCommissionRate");
-  const filterSelect = document.getElementById("deliveryFilter");
-  const selectedFilter = filterSelect ? filterSelect.value : "all";
 
   if (!orders || orders.length === 0) {
     if (summaryEl) summaryEl.innerHTML = "";
@@ -1867,13 +1888,15 @@ function renderAdminOrdersList(orders) {
   if (summaryEl) { summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate); }
 
   const filteredOrders = orders.filter(o => {
-    if (selectedFilter === "all") return true;
-    if (selectedFilter === "cancelled") return o.status === "cancelled" || o.status === "canceled";
-    return o.status === selectedFilter;
+    if (currentAdminFilter === "all") return true;
+    if (currentAdminFilter === "cancelled") return o.status === "cancelled" || o.status === "canceled";
+    if (currentAdminFilter === "preparing") return o.status === "new" || o.status === "pending" || o.status === "preparing" || o.status === "accepted";
+    if (currentAdminFilter === "delivered") return o.status === "delivered";
+    return o.status === currentAdminFilter;
   });
 
   if (!filteredOrders.length) {
-    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مطابقة لحالة التوصيل المحددة.</p>";
+    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات في هذا القسم حالياً.</p>";
     return;
   }
 
