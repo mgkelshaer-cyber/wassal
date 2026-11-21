@@ -101,18 +101,18 @@
 .promo-admin-grid input,.promo-admin-grid select{border:1px solid #dce4de;border-radius:8px;padding:8px;background:#fff;font-size:12px}
 .promo-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px}
 
-/* فولدرات لوحة الإدارة */
 .admin-folders-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .admin-folder-btn{background:#f4f8f6;border:1.5px solid #d5e2dc;color:var(--ink);padding:12px 10px;border-radius:14px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:all .18s ease}
 .admin-folder-btn:hover{border-color:var(--green2);background:#eef6f2}
 .admin-folder-btn.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 6px 14px rgba(18,60,58,0.16)}
 .admin-folder-panel{display:none;background:#fcfdfb;border:1.5px solid #dbe6e0;border-radius:16px;padding:14px;margin-bottom:14px}
 .admin-folder-panel.show{display:block;animation:fadeInTab .18s ease}
-.subfolders-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px}
-.subfolder-btn{background:#e8efec;color:#1e293b;padding:9px 10px;border-radius:11px;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .16s ease}
+.subfolders-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 14px}
+.subfolder-btn{background:#e8efec;color:#1e293b;padding:9px 8px;border-radius:11px;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .16s ease}
 .subfolder-btn.active{background:var(--green2);color:#fff;box-shadow:0 4px 10px rgba(27,98,91,0.18)}
 .subfolder-badge{background:rgba(255,255,255,0.22);padding:1px 7px;border-radius:999px;font-size:11px}
 
+@media(max-width:900px){.subfolders-row{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:1fr;gap:10px}.nav-tab-btn{flex-direction:row;text-align:right;padding:13px 14px}.nav-tab-btn span.icon-badge{width:56px;height:56px;flex-shrink:0}.nav-tab-btn span.icon-badge img{width:56px;height:56px}.nav-tab-btn div.tab-meta{flex:1}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid,.admin-folders-menu,.subfolders-row{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
@@ -297,7 +297,6 @@
     </div>
   </div>
 
-  <!-- الفولدرات الأربعة الرئيسية -->
   <div class="admin-folders-menu">
     <button type="button" class="admin-folder-btn active" id="folderBtnAdd" onclick="openAdminFolder('add')">
       <span>📁 إضافة متجر / مطعم / منتج</span>
@@ -317,7 +316,6 @@
     </button>
   </div>
 
-  <!-- محتوى فولدر 1: إضافة متجر أو مطعم أو منتج جديد -->
   <div class="admin-folder-panel show" id="folderPanelAdd">
     <div class="promo-admin-box" style="margin-bottom:12px">
       <b>➕ إضافة متجر أو مطعم جديد</b>
@@ -345,7 +343,6 @@
     </div>
   </div>
 
-  <!-- محتوى فولدر 2: التحكم السريع في فتح وإغلاق المتاجر -->
   <div class="admin-folder-panel" id="folderPanelStatus">
     <div class="promo-admin-box" style="margin-bottom:0">
       <b>🏪 التحكم السريع في فتح وإغلاق المتاجر والمطاعم</b>
@@ -353,7 +350,6 @@
     </div>
   </div>
 
-  <!-- محتوى فولدر 3: إدارة أكواد الخصم -->
   <div class="admin-folder-panel" id="folderPanelPromos">
     <div class="promo-admin-box" style="margin-bottom:0">
       <b>🎟️ إدارة أكواد الخصم والجهة المتحملة</b>
@@ -375,7 +371,6 @@
     </div>
   </div>
 
-  <!-- محتوى فولدر 4: الطلبات وفولدراتها الفرعية الأربعة -->
   <div class="admin-folder-panel" id="folderPanelOrders">
     <div class="subfolders-row">
       <button type="button" class="subfolder-btn active" id="tabAdminAll" onclick="setAdminFilter('all')">
@@ -385,6 +380,10 @@
       <button type="button" class="subfolder-btn" id="tabAdminPreparing" onclick="setAdminFilter('preparing')">
         <span>📂 قيد التجهيز</span>
         <span class="subfolder-badge" id="countFolderPreparing">0</span>
+      </button>
+      <button type="button" class="subfolder-btn" id="tabAdminOnTheWay" onclick="setAdminFilter('on_the_way')">
+        <span>📂 جاري التوصيل</span>
+        <span class="subfolder-badge" id="countFolderOnTheWay">0</span>
       </button>
       <button type="button" class="subfolder-btn" id="tabAdminDelivered" onclick="setAdminFilter('delivered')">
         <span>📂 تم التوصيل</span>
@@ -459,6 +458,22 @@ const DEFAULT_PROMO_RULES = {
 let activeAdminFolder = 'add';
 let currentAdminFilter = 'all';
 
+function isPreparingStatus(status) {
+  return status === "new" || status === "pending" || status === "preparing" || status === "accepted" || status === "confirmed" || status === "ready_for_pickup" || status === "assigned";
+}
+
+function isOnTheWayStatus(status) {
+  return status === "on_the_way" || status === "out_for_delivery" || status === "picked_up";
+}
+
+function isDeliveredStatus(status) {
+  return status === "delivered";
+}
+
+function isCancelledStatus(status) {
+  return status === "cancelled" || status === "canceled";
+}
+
 function openAdminFolder(folderKey) {
   activeAdminFolder = folderKey;
 
@@ -497,6 +512,7 @@ function setAdminFilter(filterType) {
   const tabMap = {
     all: 'tabAdminAll',
     preparing: 'tabAdminPreparing',
+    on_the_way: 'tabAdminOnTheWay',
     delivered: 'tabAdminDelivered',
     cancelled: 'tabAdminCancelled'
   };
@@ -512,11 +528,10 @@ function setAdminFilter(filterType) {
 function updateOrdersFolderCounts(orders) {
   const list = Array.isArray(orders) ? orders : [];
   const allCount = list.length;
-  const preparingCount = list.filter(o =>
-    o.status === "new" || o.status === "pending" || o.status === "preparing" || o.status === "accepted" || o.status === "on_the_way" || o.status === "out_for_delivery" || o.status === "picked_up"
-  ).length;
-  const deliveredCount = list.filter(o => o.status === "delivered").length;
-  const cancelledCount = list.filter(o => o.status === "cancelled" || o.status === "canceled").length;
+  const preparingCount = list.filter(o => isPreparingStatus(o.status)).length;
+  const onTheWayCount = list.filter(o => isOnTheWayStatus(o.status)).length;
+  const deliveredCount = list.filter(o => isDeliveredStatus(o.status)).length;
+  const cancelledCount = list.filter(o => isCancelledStatus(o.status)).length;
 
   const setTxt = (id, val) => {
     const el = document.getElementById(id);
@@ -524,6 +539,7 @@ function updateOrdersFolderCounts(orders) {
   };
   setTxt('countFolderAll', allCount);
   setTxt('countFolderPreparing', preparingCount);
+  setTxt('countFolderOnTheWay', onTheWayCount);
   setTxt('countFolderDelivered', deliveredCount);
   setTxt('countFolderCancelled', cancelledCount);
 }
@@ -1151,9 +1167,9 @@ function renderCourierOrdersList(orders) {
     const storeLabel = o.store_id
       ? (storeNameCache[o.store_id] || `متجر (${o.store_id})`)
       : "طلب عام";
-    const isOnTheWay = o.status === "on_the_way" || o.status === "out_for_delivery" || o.status === "picked_up";
-    const isDelivered = o.status === "delivered";
-    const isCancelled = o.status === "cancelled" || o.status === "canceled";
+    const isOnTheWay = isOnTheWayStatus(o.status);
+    const isDelivered = isDeliveredStatus(o.status);
+    const isCancelled = isCancelledStatus(o.status);
     const mapsQuery = encodeURIComponent(`${o.delivery_area || ""} ${o.delivery_address || ""}`.trim());
     const mapsUrl = mapsQuery ? `https://www.google.com/maps/search/?api=1&query=${mapsQuery}` : "";
 
@@ -1178,9 +1194,9 @@ function renderCourierOrdersList(orders) {
 }
 
 function getTrackingStageIndex(status) {
-  if (status === "cancelled" || status === "canceled") return -1;
-  if (status === "delivered") return 3;
-  if (status === "on_the_way" || status === "out_for_delivery" || status === "picked_up") return 2;
+  if (isCancelledStatus(status)) return -1;
+  if (isDeliveredStatus(status)) return 3;
+  if (isOnTheWayStatus(status)) return 2;
   return 1;
 }
 
@@ -1314,7 +1330,7 @@ function parseOrderPromoFromNotes(order) {
 }
 
 function calculateOrderCommission(order, ratePercent) {
-  const isCanceled = order.status === "cancelled" || order.status === "canceled";
+  const isCanceled = isCancelledStatus(order.status);
   const promoInfo = parseOrderPromoFromNotes(order);
   const baseAmount = promoInfo.baseAmount;
   if (isCanceled || baseAmount <= 0) {
@@ -1343,7 +1359,7 @@ function calculateOrderCommission(order, ratePercent) {
 }
 
 function buildSettlementSummaryHtml(orders, ratePercent) {
-  const activeOrders = (orders || []).filter(o => o.status !== "cancelled" && o.status !== "canceled");
+  const activeOrders = (orders || []).filter(o => !isCancelledStatus(o.status));
   const grossSales = activeOrders.reduce((sum, o) => sum + Number(o.subtotal ?? o.total ?? 0), 0);
   const totalCommission = activeOrders.reduce((sum, o) => sum + calculateOrderCommission(o, ratePercent).commission, 0);
   const totalNetStore = activeOrders.reduce((sum, o) => sum + calculateOrderCommission(o, ratePercent).netStore, 0);
@@ -1998,11 +2014,10 @@ function renderAdminOrdersList(orders) {
 
   const filteredOrders = allOrders.filter(o => {
     if (currentAdminFilter === "all") return true;
-    if (currentAdminFilter === "cancelled") return o.status === "cancelled" || o.status === "canceled";
-    if (currentAdminFilter === "preparing") {
-      return o.status === "new" || o.status === "pending" || o.status === "preparing" || o.status === "accepted" || o.status === "on_the_way" || o.status === "out_for_delivery" || o.status === "picked_up";
-    }
-    if (currentAdminFilter === "delivered") return o.status === "delivered";
+    if (currentAdminFilter === "cancelled") return isCancelledStatus(o.status);
+    if (currentAdminFilter === "preparing") return isPreparingStatus(o.status);
+    if (currentAdminFilter === "on_the_way") return isOnTheWayStatus(o.status);
+    if (currentAdminFilter === "delivered") return isDeliveredStatus(o.status);
     return o.status === currentAdminFilter;
   });
 
