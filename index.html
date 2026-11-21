@@ -101,7 +101,19 @@
 .promo-admin-grid input,.promo-admin-grid select{border:1px solid #dce4de;border-radius:8px;padding:8px;background:#fff;font-size:12px}
 .promo-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px}
 
-@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:1fr;gap:10px}.nav-tab-btn{flex-direction:row;text-align:right;padding:13px 14px}.nav-tab-btn span.icon-badge{width:56px;height:56px;flex-shrink:0}.nav-tab-btn span.icon-badge img{width:56px;height:56px}.nav-tab-btn div.tab-meta{flex:1}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
+/* فولدرات لوحة الإدارة */
+.admin-folders-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.admin-folder-btn{background:#f4f8f6;border:1.5px solid #d5e2dc;color:var(--ink);padding:12px 10px;border-radius:14px;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:all .18s ease}
+.admin-folder-btn:hover{border-color:var(--green2);background:#eef6f2}
+.admin-folder-btn.active{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 6px 14px rgba(18,60,58,0.16)}
+.admin-folder-panel{display:none;background:#fcfdfb;border:1.5px solid #dbe6e0;border-radius:16px;padding:14px;margin-bottom:14px}
+.admin-folder-panel.show{display:block;animation:fadeInTab .18s ease}
+.subfolders-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px}
+.subfolder-btn{background:#e8efec;color:#1e293b;padding:9px 10px;border-radius:11px;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .16s ease}
+.subfolder-btn.active{background:var(--green2);color:#fff;box-shadow:0 4px 10px rgba(27,98,91,0.18)}
+.subfolder-badge{background:rgba(255,255,255,0.22);padding:1px 7px;border-radius:999px;font-size:11px}
+
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:20px}.hero-art{display:none}.main-nav-tabs{grid-template-columns:1fr;gap:10px}.nav-tab-btn{flex-direction:row;text-align:right;padding:13px 14px}.nav-tab-btn span.icon-badge{width:56px;height:56px;flex-shrink:0}.nav-tab-btn span.icon-badge img{width:56px;height:56px}.nav-tab-btn div.tab-meta{flex:1}.products{grid-template-columns:repeat(2,1fr)}.steps,.settlement-grid,.track-steps,.promo-admin-grid,.admin-folders-menu,.subfolders-row{grid-template-columns:1fr}.top{padding:12px 15px}.top button{font-size:12px}}
 </style>
 <link rel="manifest" href="manifest.json">
 </head>
@@ -266,55 +278,11 @@
 
  <section class="panel admin" id="admin">
   <div class="drawer-head">
-    <h3>لوحة تحكم وصّال (مركز الطلبات والعمولات والتوصيل)</h3>
+    <h3>لوحة تحكم وصّال (منظمة بالفولدرات)</h3>
     <button class="close" onclick="closeAdmin()">×</button>
   </div>
-  <div class="promo-admin-box">
-    <b>➕ إضافة متجر أو مطعم جديد</b>
-    <div class="promo-admin-grid" style="grid-template-columns:repeat(4,1fr)">
-      <input id="newStoreName" placeholder="اسم المتجر أو المطعم">
-      <select id="newStoreCategory">
-        <option value="سوبر ماركت">سوبر ماركت</option>
-        <option value="مطاعم">مطاعم</option>
-        <option value="صيدليات">صيدليات</option>
-        <option value="مخابز">مخابز</option>
-      </select>
-      <input id="newStoreImage" placeholder="رابط الصورة (اختياري)">
-      <button type="button" onclick="createNewStore()" style="background:var(--green);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">إضافة الجهة</button>
-    </div>
-  </div>
-  <div class="promo-admin-box">
-    <b>📦 إضافة منتج لمتجر أو مطعم</b>
-    <div class="promo-admin-grid" style="grid-template-columns:repeat(5,1fr)">
-      <select id="newProductStoreId"></select>
-      <input id="newProductName" placeholder="اسم المنتج">
-      <input id="newProductPrice" type="number" min="1" step="0.5" placeholder="السعر (ج.م)">
-      <input id="newProductUnit" placeholder="الوحدة (مثال: للقطعة)">
-      <button type="button" onclick="createNewProduct()" style="background:var(--green2);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">إضافة المنتج</button>
-    </div>
-  </div>
-  <div class="promo-admin-box">
-    <b>🏪 التحكم السريع في فتح وإغلاق المتاجر والمطاعم</b>
-    <div id="adminStoresStatusList" style="margin-top:8px"></div>
-  </div>
-  <div class="promo-admin-box">
-    <b>🎟️ إدارة أكواد الخصم والجهة المتحملة</b>
-    <div class="promo-admin-grid">
-      <input id="newPromoCode" placeholder="رمز الكود (مثل WASSAL15)">
-      <select id="newPromoType">
-        <option value="percent">نسبة مئوية (%)</option>
-        <option value="fixed">مبلغ ثابت (ج.م)</option>
-      </select>
-      <input id="newPromoValue" type="number" min="1" step="0.5" placeholder="القيمة (مثلاً 10 أو 20)">
-      <select id="newPromoBearer">
-        <option value="platform">يتحمّله الموقع</option>
-        <option value="store">يتحمّله المتجر</option>
-        <option value="split">مناصفة (50% / 50%)</option>
-      </select>
-      <button type="button" onclick="savePromoRule()" style="background:var(--green);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">حفظ الكود</button>
-    </div>
-    <div id="adminPromoList"></div>
-  </div>
+  <p class="muted" style="margin-top:0">اضغط على أي فولدر لعرض محتوياته الحالية، وداخل فولدر الطلبات اختر الفولدر الفرعي المطلوب.</p>
+
   <div class="admin-bar">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="realtimeStatus" class="rt-pill">⏳ وضع التحديث اللحظي في الانتظار</span>
@@ -328,21 +296,113 @@
       <button onclick="fetchOrdersFromSupabase()" style="background:var(--green2);color:#fff;padding:6px 11px;border-radius:8px;font-weight:700">↻ تحديث الآن</button>
     </div>
   </div>
-  
-  <!-- تبويبات الطلبات الفولدرات -->
-  <div class="admin-tabs" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <button type="button" class="admin-tab-btn active" id="tabAdminAll" onclick="setAdminFilter('all')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:var(--green);color:#fff">الكل</button>
-    <button type="button" class="admin-tab-btn" id="tabAdminPreparing" onclick="setAdminFilter('preparing')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:#e2e8f0;color:#334155">قيد التجهيز ⏳</button>
-    <button type="button" class="admin-tab-btn" id="tabAdminDelivered" onclick="setAdminFilter('delivered')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:#e2e8f0;color:#334155">تم التوصيل ✅</button>
-    <button type="button" class="admin-tab-btn" id="tabAdminCancelled" onclick="setAdminFilter('cancelled')" style="padding:8px 14px;border-radius:10px;font-weight:800;background:#e2e8f0;color:#334155">تم الإلغاء ❌</button>
+
+  <!-- الفولدرات الأربعة الرئيسية -->
+  <div class="admin-folders-menu">
+    <button type="button" class="admin-folder-btn active" id="folderBtnAdd" onclick="openAdminFolder('add')">
+      <span>📁 إضافة متجر / مطعم / منتج</span>
+      <span id="folderArrowAdd">▾</span>
+    </button>
+    <button type="button" class="admin-folder-btn" id="folderBtnStatus" onclick="openAdminFolder('status')">
+      <span>📁 فتح وإغلاق المتاجر</span>
+      <span id="folderArrowStatus">▸</span>
+    </button>
+    <button type="button" class="admin-folder-btn" id="folderBtnPromos" onclick="openAdminFolder('promos')">
+      <span>📁 إدارة أكواد الخصم</span>
+      <span id="folderArrowPromos">▸</span>
+    </button>
+    <button type="button" class="admin-folder-btn" id="folderBtnOrders" onclick="openAdminFolder('orders')">
+      <span>📁 الطلبات</span>
+      <span id="folderArrowOrders">▸</span>
+    </button>
   </div>
 
-  <div class="alert-banner" id="adminAlertBanner">
-    <span id="adminAlertText"></span>
-    <button onclick="hideAlertBanner('adminAlertBanner')" style="background:transparent;color:#5c3c00;font-weight:800">×</button>
+  <!-- محتوى فولدر 1: إضافة متجر أو مطعم أو منتج جديد -->
+  <div class="admin-folder-panel show" id="folderPanelAdd">
+    <div class="promo-admin-box" style="margin-bottom:12px">
+      <b>➕ إضافة متجر أو مطعم جديد</b>
+      <div class="promo-admin-grid" style="grid-template-columns:repeat(4,1fr)">
+        <input id="newStoreName" placeholder="اسم المتجر أو المطعم">
+        <select id="newStoreCategory">
+          <option value="سوبر ماركت">سوبر ماركت</option>
+          <option value="مطاعم">مطاعم</option>
+          <option value="صيدليات">صيدليات</option>
+          <option value="مخابز">مخابز</option>
+        </select>
+        <input id="newStoreImage" placeholder="رابط الصورة (اختياري)">
+        <button type="button" onclick="createNewStore()" style="background:var(--green);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">إضافة الجهة</button>
+      </div>
+    </div>
+    <div class="promo-admin-box" style="margin-bottom:0">
+      <b>📦 إضافة منتج لمتجر أو مطعم</b>
+      <div class="promo-admin-grid" style="grid-template-columns:repeat(5,1fr)">
+        <select id="newProductStoreId"></select>
+        <input id="newProductName" placeholder="اسم المنتج">
+        <input id="newProductPrice" type="number" min="1" step="0.5" placeholder="السعر (ج.م)">
+        <input id="newProductUnit" placeholder="الوحدة (مثال: للقطعة)">
+        <button type="button" onclick="createNewProduct()" style="background:var(--green2);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">إضافة المنتج</button>
+      </div>
+    </div>
   </div>
-  <div id="adminSettlementSummary"></div>
-  <div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div>
+
+  <!-- محتوى فولدر 2: التحكم السريع في فتح وإغلاق المتاجر -->
+  <div class="admin-folder-panel" id="folderPanelStatus">
+    <div class="promo-admin-box" style="margin-bottom:0">
+      <b>🏪 التحكم السريع في فتح وإغلاق المتاجر والمطاعم</b>
+      <div id="adminStoresStatusList" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- محتوى فولدر 3: إدارة أكواد الخصم -->
+  <div class="admin-folder-panel" id="folderPanelPromos">
+    <div class="promo-admin-box" style="margin-bottom:0">
+      <b>🎟️ إدارة أكواد الخصم والجهة المتحملة</b>
+      <div class="promo-admin-grid">
+        <input id="newPromoCode" placeholder="رمز الكود (مثل WASSAL15)">
+        <select id="newPromoType">
+          <option value="percent">نسبة مئوية (%)</option>
+          <option value="fixed">مبلغ ثابت (ج.م)</option>
+        </select>
+        <input id="newPromoValue" type="number" min="1" step="0.5" placeholder="القيمة (مثلاً 10 أو 20)">
+        <select id="newPromoBearer">
+          <option value="platform">يتحمّله الموقع</option>
+          <option value="store">يتحمّله المتجر</option>
+          <option value="split">مناصفة (50% / 50%)</option>
+        </select>
+        <button type="button" onclick="savePromoRule()" style="background:var(--green);color:#fff;padding:8px 10px;border-radius:8px;font-weight:700">حفظ الكود</button>
+      </div>
+      <div id="adminPromoList"></div>
+    </div>
+  </div>
+
+  <!-- محتوى فولدر 4: الطلبات وفولدراتها الفرعية الأربعة -->
+  <div class="admin-folder-panel" id="folderPanelOrders">
+    <div class="subfolders-row">
+      <button type="button" class="subfolder-btn active" id="tabAdminAll" onclick="setAdminFilter('all')">
+        <span>📂 الكل</span>
+        <span class="subfolder-badge" id="countFolderAll">0</span>
+      </button>
+      <button type="button" class="subfolder-btn" id="tabAdminPreparing" onclick="setAdminFilter('preparing')">
+        <span>📂 قيد التجهيز</span>
+        <span class="subfolder-badge" id="countFolderPreparing">0</span>
+      </button>
+      <button type="button" class="subfolder-btn" id="tabAdminDelivered" onclick="setAdminFilter('delivered')">
+        <span>📂 تم التوصيل</span>
+        <span class="subfolder-badge" id="countFolderDelivered">0</span>
+      </button>
+      <button type="button" class="subfolder-btn" id="tabAdminCancelled" onclick="setAdminFilter('cancelled')">
+        <span>📂 الإلغاء</span>
+        <span class="subfolder-badge" id="countFolderCancelled">0</span>
+      </button>
+    </div>
+
+    <div class="alert-banner" id="adminAlertBanner">
+      <span id="adminAlertText"></span>
+      <button onclick="hideAlertBanner('adminAlertBanner')" style="background:transparent;color:#5c3c00;font-weight:800">×</button>
+    </div>
+    <div id="adminSettlementSummary"></div>
+    <div id="ordersList"><p class="muted">جاري تحميل الطلبات الحقيقية من Supabase...</p></div>
+  </div>
  </section>
 
  <p class="muted" style="text-align:center;margin-top:20px">نظام وصّال دسوق — متصل بقاعدة بيانات Supabase المباشرة.</p>
@@ -364,7 +424,7 @@
   <label for="promoCodeInput" style="font-size:12px;font-weight:700">🎟️ كود الخصم</label>
   <div class="promo-row">
    <input id="promoCodeInput" placeholder="أدخل كود الخصم" onkeydown="if(event.key==='Enter'){event.preventDefault();applyPromoCode()}">
-   <button type="button" onclick="applyPromoCode()" style="background:var(--green2);color:#fff;padding:8px 12px;border-radius:99px;font-weight:700">تطبيق</button>
+   <button type="button" onclick="applyPromoCode()" style="background:var(--green2);color:#fff;padding:8px 12px;border-radius:9px;font-weight:700">تطبيق</button>
    <button type="button" onclick="clearPromoCode()" style="background:#edf1ed;color:var(--ink);padding:8px 10px;border-radius:9px;font-weight:700">إزالة</button>
   </div>
   <div class="promo-msg muted" id="promoMessage"></div>
@@ -396,7 +456,41 @@ const DEFAULT_PROMO_RULES = {
   WELCOME20: { type: "fixed", value: 20, bearer: "platform", active: true }
 };
 
+let activeAdminFolder = 'add';
 let currentAdminFilter = 'all';
+
+function openAdminFolder(folderKey) {
+  activeAdminFolder = folderKey;
+
+  const config = {
+    add: { btn: 'folderBtnAdd', panel: 'folderPanelAdd', arrow: 'folderArrowAdd' },
+    status: { btn: 'folderBtnStatus', panel: 'folderPanelStatus', arrow: 'folderArrowStatus' },
+    promos: { btn: 'folderBtnPromos', panel: 'folderPanelPromos', arrow: 'folderArrowPromos' },
+    orders: { btn: 'folderBtnOrders', panel: 'folderPanelOrders', arrow: 'folderArrowOrders' }
+  };
+
+  Object.keys(config).forEach(key => {
+    const item = config[key];
+    const isSelected = key === folderKey;
+    const btnEl = document.getElementById(item.btn);
+    const panelEl = document.getElementById(item.panel);
+    const arrowEl = document.getElementById(item.arrow);
+
+    if (btnEl) btnEl.classList.toggle('active', isSelected);
+    if (panelEl) panelEl.classList.toggle('show', isSelected);
+    if (arrowEl) arrowEl.textContent = isSelected ? '▾' : '▸';
+  });
+
+  if (folderKey === 'add') {
+    populateProductStoreSelect();
+  } else if (folderKey === 'status') {
+    renderAdminStoresStatusList();
+  } else if (folderKey === 'promos') {
+    renderAdminPromoList();
+  } else if (folderKey === 'orders') {
+    renderAdminOrdersList(lastAdminOrders);
+  }
+}
 
 function setAdminFilter(filterType) {
   currentAdminFilter = filterType;
@@ -409,18 +503,29 @@ function setAdminFilter(filterType) {
 
   Object.keys(tabMap).forEach(key => {
     const btn = document.getElementById(tabMap[key]);
-    if (btn) {
-      if (key === filterType) {
-        btn.style.background = "var(--green)";
-        btn.style.color = "#fff";
-      } else {
-        btn.style.background = "#e2e8f0";
-        btn.style.color = "#334155";
-      }
-    }
+    if (btn) btn.classList.toggle('active', key === filterType);
   });
 
   renderAdminOrdersList(lastAdminOrders);
+}
+
+function updateOrdersFolderCounts(orders) {
+  const list = Array.isArray(orders) ? orders : [];
+  const allCount = list.length;
+  const preparingCount = list.filter(o =>
+    o.status === "new" || o.status === "pending" || o.status === "preparing" || o.status === "accepted" || o.status === "on_the_way" || o.status === "out_for_delivery" || o.status === "picked_up"
+  ).length;
+  const deliveredCount = list.filter(o => o.status === "delivered").length;
+  const cancelledCount = list.filter(o => o.status === "cancelled" || o.status === "canceled").length;
+
+  const setTxt = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  setTxt('countFolderAll', allCount);
+  setTxt('countFolderPreparing', preparingCount);
+  setTxt('countFolderDelivered', deliveredCount);
+  setTxt('countFolderCancelled', cancelledCount);
 }
 
 function switchMainTab(tabName) {
@@ -1857,6 +1962,7 @@ async function showAdmin(){
  populateProductStoreSelect();
  renderAdminPromoList();
  updateSoundButtons();
+ openAdminFolder(activeAdminFolder);
  subscribeOrdersRealtime();
  fetchOrdersFromSupabase();
 }
@@ -1875,31 +1981,37 @@ async function ensureStoreNamesLoaded(orders) {
 }
 
 function renderAdminOrdersList(orders) {
+  const allOrders = Array.isArray(orders) ? orders : [];
+  updateOrdersFolderCounts(allOrders);
+
   const summaryEl = document.getElementById("adminSettlementSummary");
   const listDiv = document.getElementById("ordersList");
   const rate = getCommissionRate("adminCommissionRate");
 
-  if (!orders || orders.length === 0) {
+  if (!allOrders.length) {
     if (summaryEl) summaryEl.innerHTML = "";
-    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة بعد.</p>";
+    if (listDiv) listDiv.innerHTML = "<p class='muted'>لا توجد طلبات مسجلة بعد.</p>";
     return;
   }
 
-  if (summaryEl) { summaryEl.innerHTML = buildSettlementSummaryHtml(orders, rate); }
+  if (summaryEl) { summaryEl.innerHTML = buildSettlementSummaryHtml(allOrders, rate); }
 
-  const filteredOrders = orders.filter(o => {
+  const filteredOrders = allOrders.filter(o => {
     if (currentAdminFilter === "all") return true;
     if (currentAdminFilter === "cancelled") return o.status === "cancelled" || o.status === "canceled";
-    if (currentAdminFilter === "preparing") return o.status === "new" || o.status === "pending" || o.status === "preparing" || o.status === "accepted";
+    if (currentAdminFilter === "preparing") {
+      return o.status === "new" || o.status === "pending" || o.status === "preparing" || o.status === "accepted" || o.status === "on_the_way" || o.status === "out_for_delivery" || o.status === "picked_up";
+    }
     if (currentAdminFilter === "delivered") return o.status === "delivered";
     return o.status === currentAdminFilter;
   });
 
   if (!filteredOrders.length) {
-    listDiv.innerHTML = "<p class='muted'>لا توجد طلبات في هذا القسم حالياً.</p>";
+    if (listDiv) listDiv.innerHTML = "<p class='muted'>لا توجد طلبات داخل هذا الفولدر حالياً.</p>";
     return;
   }
 
+  if (!listDiv) return;
   listDiv.innerHTML = filteredOrders.map(o => {
     const itemsList = o.order_items ? o.order_items.map(i => `${i.item_name} × ${i.quantity}`).join("، ") : "";
     const storeLabel = o.store_id
@@ -1943,7 +2055,7 @@ async function fetchOrdersFromSupabase(silent = false){
  const summaryEl = document.getElementById("adminSettlementSummary");
  if (!silent) {
    if (summaryEl) summaryEl.innerHTML = "";
-   listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات...</p>";
+   if (listDiv) listDiv.innerHTML = "<p class='muted'>جاري تحميل الطلبات...</p>";
  }
  try {
    const { data: orders, error } = await supabaseClient
@@ -1961,7 +2073,7 @@ async function fetchOrdersFromSupabase(silent = false){
    populateCourierSuggestions(lastAdminOrders);
    renderAdminOrdersList(lastAdminOrders);
  } catch(err) {
-   listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
+   if (listDiv) listDiv.innerHTML = "<p style='color:red;'>خطأ في التحميل: " + err.message + "</p>";
  }
 }
 
